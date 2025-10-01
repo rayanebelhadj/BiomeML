@@ -1,0 +1,10 @@
+rebuild2.py
+__pycache__/
+*.pyc
+.pixi/
+data/
+experiments/
+analysis/
+figures/
+docs/
+.DS_Store

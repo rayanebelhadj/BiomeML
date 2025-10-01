@@ -1,0 +1,55 @@
+[project]
+name = "ibd-recherche"
+version = "0.1.0"
+channels = ["pytorch", "nvidia", "pyg", "conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = "3.11.*"
+
+# PyTorch GPU
+pytorch = { version = "2.4.*", channel = "pytorch" }
+pytorch-cuda = { version = "12.1.*", channel = "pytorch" }
+
+# PyTorch Geometric
+pyg = { version = ">=2.5.0", channel = "pyg" }
+pytorch-scatter = { channel = "pyg" }
+pytorch-sparse = { channel = "pyg" }
+pytorch-cluster = { channel = "pyg" }
+
+# Scientific stack
+pandas = "*"
+scikit-bio = "*"
+jupyter = "*"
+jupyterlab = "*"
+ipykernel = "*"
+nbconvert = "*"
+matplotlib = "*"
+seaborn = "*"
+numpy = "*"
+scipy = "*"
+h5py = "*"
+requests = "*"
+biopython = "*"
+biom-format = "*"
+networkx = "*"
+scikit-learn = "*"
+tqdm = "*"
+
+# Utilities
+pyyaml = "*"
+faiss-gpu = ">=1.11.0,<2"
+
+[tasks]
+# Main commands
+menu = { cmd = "python scripts/run_interactive.py", description = "Interactive experiment menu" }
+run = { cmd = "python scripts/run_experiments.py", description = "Run experiments (use --help for options)" }
+analyze = { cmd = "python scripts/analyze_results.py", description = "Analyze experiment results" }
+visualize = { cmd = "python scripts/create_visualizations.py", description = "Create visualizations" }
+
+# Development
+jupyter = "jupyter lab"
+
+# Environment check
+check = { cmd = "python -c \"import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}'); import torch_geometric; print(f'PyG: {torch_geometric.__version__}')\"", description = "Check environment" }
+test = { cmd = "python -c \"from src.models import get_model; from src.edge_weights import list_strategies; print('All imports OK')\"", description = "Test imports" }
