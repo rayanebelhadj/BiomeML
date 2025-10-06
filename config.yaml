@@ -1,0 +1,171 @@
+data_extraction:
+  input_files:
+    biom_path: "data/AGP.data.biom"
+    metadata_path: "data/AGP-metadata.tsv"
+    phylogeny_path: "data/2024.09.phylogeny.asv.nwk"
+    aln_stockholm_path: "data/T2D_seqs_CMaligned_with_Rfam.sto"
+    phylo_network_path: "data/neighbornet_txt.gml"
+    sequences_path: "ASV_sequences.fasta"
+
+  clinical_features:
+    enable: false
+    features:
+      use_age: true
+      use_sex: true
+      use_bmi: true
+      use_antibiotics: true
+      use_age_category: false
+
+  disease_criteria:
+    disease: "IBD"
+    ibd_positive_values:
+      - "Diagnosed by a medical professional (doctor, physician assistant)"
+    ibd_negative_values:
+      - "I do not have this condition"
+    valid_ibd_types:
+      - "Crohn's disease"
+      - "Ulcerative colitis"
+
+  matching:
+    age_categories: ["20s", "30s", "40s", "50s", "60s", "70+"]
+    bmi_categories: ["Underweight", "Normal", "Overweight", "Obese"]
+    random_seed: 42
+
+  distance_matrices:
+    use_tree_distance: true
+    use_sequence_distance: false
+    use_graph_distance: false
+    primary_matrix: "TreeDistMatrix"
+
+  output:
+    base_dir: "notebooks/IBD_analysis_output"
+    metadata_dir: "metadata"
+    biom_dir: "biom_tables"
+    phylogeny_dir: "phylogeny"
+    sequences_dir: "sequences"
+
+graph_construction:
+  quality:
+    min_nodes: 8
+    min_edges: 5
+    max_nodes_per_graph: 3000
+    remove_isolates: true
+    connectivity_check: false
+
+  knn:
+    k: 10
+    symmetric: true
+    max_distance_factor: 3.5
+
+  weights:
+    normalize: true
+    weight_transform: "inverse"
+
+  processing:
+    parallel: false
+    batch_size: 50
+    save_intermediate: true
+
+  output:
+    save_networkx: true
+    save_visualizations: true
+    max_nodes_to_plot: 100
+
+  node_features:
+    use_abundance: true
+    use_log_abundance: false
+    use_zscore_abundance: false
+    use_prevalence: false
+    use_variance: false
+    use_phylo_depth: false
+    feature_combination: "concat"
+
+  edge_features:
+    use_distance: true
+    use_log_distance: false
+    use_inv_distance: false
+    combine_distances: false
+    distance_combination: "mean"
+
+model_training:
+  dataset:
+    test_size: 0.25
+    val_size: 0.25
+    random_seed: 42
+    stratify: true
+
+  architecture:
+    model_type: "GINEConv"
+    hidden_dim: 160
+    num_layers: 2
+    dropout: 0.3
+    pooling: "mean"
+    activation: "relu"
+
+  training:
+    batch_size: 16
+    num_epochs: 200
+    learning_rate: 0.0001
+    weight_decay: 0.000005
+    patience: 30
+    min_delta: 0.001
+
+    loss:
+      type: "cross_entropy"
+      class_weights: null
+      focal_gamma: 2.0
+
+  optimizer:
+    type: "adam"
+    momentum: 0.9
+    betas: [0.9, 0.999]
+
+  device:
+    use_cuda: true
+    device_id: 0
+
+  metrics:
+    primary_metric: "val_loss"
+    track_metrics:
+      - "accuracy"
+      - "auc_roc"
+      - "precision"
+      - "recall"
+      - "f1_score"
+
+  evaluation:
+    enable_cross_validation: true
+    n_folds: 5
+    num_runs_per_experiment: 50
+    report_confidence_intervals: true
+    significance_level: 0.05
+    multiple_testing_correction: "bonferroni"
+    enable_interpretation: true
+    top_features_to_explain: 20
+    generate_embeddings_viz: true
+
+  output:
+    save_model: true
+    save_history: true
+    save_predictions: true
+    save_plots: true
+    results_dir: "results"
+    models_dir: "models"
+
+visualization:
+  style: "seaborn"
+  figsize: [12, 8]
+  dpi: 150
+  save_format: "png"
+  show_plots: false
+
+logging:
+  level: "INFO"
+  save_logs: true
+  log_dir: "logs"
+  verbose: true
+
+reproducibility:
+  random_seed: 42
+  deterministic: true
+  benchmark: false
