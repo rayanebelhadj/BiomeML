@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Pixi environment
+.pixi/
+
+# Data files (large)
+data/
+
+# Experiment results (large, generated)
+experiments/
+multi_disease_data/
+disease_samples/
+
+# Logs
+logs/
+*.log
+
+# Analysis outputs (regenerable)
+analysis/
+figures/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# Archives and backups
+archive/
+*.tar.gz
+*.zip
+
+# Temporary files
+*.tmp
+*.temp
+.~*
+~$*
+create_commits.sh
