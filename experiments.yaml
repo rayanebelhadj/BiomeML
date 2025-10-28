@@ -1,0 +1,152 @@
+baseline:
+  name: baseline
+  disease: ibd
+  description: GINEConv baseline with k=10, Pearson correlation graph
+  model_training:
+    architecture:
+      model_type: GINEConv
+k_5:
+  name: k_5
+  disease: ibd
+  description: k-NN with k=5
+  graph_construction:
+    knn:
+      k: 5
+k_15:
+  name: k_15
+  disease: ibd
+  description: k-NN with k=15
+  graph_construction:
+    knn:
+      k: 15
+k_20:
+  name: k_20
+  disease: ibd
+  description: k-NN with k=20
+  graph_construction:
+    knn:
+      k: 20
+distance_tree:
+  name: distance_tree
+  disease: ibd
+  description: Using tree distance metric
+distance_sequence:
+  name: distance_sequence
+  disease: ibd
+  description: Using sequence distance metric
+distance_graph:
+  name: distance_graph
+  disease: ibd
+  description: Using graph distance metric
+edge_identity:
+  name: edge_identity
+  disease: ibd
+  description: Edge weight strategy identity
+  graph_construction:
+    weights:
+      weight_transform: identity
+edge_exponential:
+  name: edge_exponential
+  disease: ibd
+  description: Edge weight strategy exponential
+  graph_construction:
+    weights:
+      weight_transform: exponential
+edge_binary:
+  name: edge_binary
+  disease: ibd
+  description: Edge weight strategy binary
+  graph_construction:
+    weights:
+      weight_transform: binary
+gcn_arch:
+  name: gcn_arch
+  disease: ibd
+  description: GCN model
+  model_training:
+    architecture:
+      model_type: GCN
+gat_arch:
+  name: gat_arch
+  disease: ibd
+  description: GAT model
+  model_training:
+    architecture:
+      model_type: GAT
+graphsage_arch:
+  name: graphsage_arch
+  disease: ibd
+  description: GraphSAGE model
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+hidden_64:
+  name: hidden_64
+  disease: ibd
+  description: Smaller hidden dimension 64
+  model_training:
+    architecture:
+      hidden_dim: 64
+hidden_256:
+  name: hidden_256
+  disease: ibd
+  description: Larger hidden dimension 256
+  model_training:
+    architecture:
+      hidden_dim: 256
+layers_1:
+  name: layers_1
+  disease: ibd
+  description: Single layer
+  model_training:
+    architecture:
+      num_layers: 1
+layers_3:
+  name: layers_3
+  disease: ibd
+  description: Three layers
+  model_training:
+    architecture:
+      num_layers: 3
+dropout_01:
+  name: dropout_01
+  disease: ibd
+  description: Low dropout 0.1
+  model_training:
+    architecture:
+      dropout: 0.1
+dropout_05:
+  name: dropout_05
+  disease: ibd
+  description: High dropout 0.5
+  model_training:
+    architecture:
+      dropout: 0.5
+lr_001:
+  name: lr_001
+  disease: ibd
+  description: Learning rate 0.001
+  model_training:
+    training:
+      learning_rate: 0.001
+lr_00001:
+  name: lr_00001
+  disease: ibd
+  description: Learning rate 0.00001
+  model_training:
+    training:
+      learning_rate: 0.00001
+batch_32:
+  name: batch_32
+  disease: ibd
+  description: Batch size 32
+  model_training:
+    training:
+      batch_size: 32
+batch_8:
+  name: batch_8
+  disease: ibd
+  description: Batch size 8
+  model_training:
+    training:
+      batch_size: 8
