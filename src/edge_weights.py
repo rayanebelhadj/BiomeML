@@ -25,6 +25,8 @@ def binary(distance: float, abundance1: float = None, abundance2: float = None) 
 
 def abundance_product(distance: float, abundance1: float, abundance2: float) -> float:
     inv_dist = 1.0 / (distance + 1e-8)
+    if abundance1 is None or abundance2 is None:
+        return inv_dist
     return inv_dist * abundance1 * abundance2
 
 
