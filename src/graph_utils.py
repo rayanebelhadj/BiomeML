@@ -116,6 +116,44 @@ def validate_graph(G: nx.Graph, min_nodes: int = 8, min_edges: int = 5) -> Tuple
     return True, "ok"
 
 
+
+def load_experiment_config():
+    """Load experiment config from env var if available."""
+    import os
+    import yaml
+    from pathlib import Path
+
+    exp_config_path = os.environ.get('EXPERIMENT_CONFIG_PATH')
+    if exp_config_path and Path(exp_config_path).exists():
+        with open(exp_config_path) as f:
+            return yaml.safe_load(f)
+    return {}
+
+
+def get_graph_params_from_config(experiment_config: dict, default_params: dict) -> dict:
+    """Merge experiment config with default graph params."""
+    params = default_params.copy()
+    gc_config = experiment_config.get('graph_construction', {})
+    knn_config = gc_config.get('knn', {})
+    if 'k' in knn_config:
+        params['knn_k'] = knn_config['k']
+    if 'symmetric' in knn_config:
+        params['knn_symmetric'] = knn_config['symmetric']
+    if 'max_distance_factor' in knn_config:
+        params['knn_max_distance_factor'] = knn_config['max_distance_factor']
+    quality_config = gc_config.get('quality', {})
+    if 'min_nodes' in quality_config:
+        params['min_nodes'] = quality_config['min_nodes']
+    if 'min_edges' in quality_config:
+        params['min_edges'] = quality_config['min_edges']
+    edge_config = gc_config.get('edge_construction', {})
+    params['randomize_edges'] = edge_config.get('randomize_edges', False)
+    params['preserve_degree'] = edge_config.get('preserve_degree', True)
+    weight_config = gc_config.get('weights', {})
+    params['weight_transform'] = weight_config.get('weight_transform', 'identity')
+    return params
+
+
 def build_knn_graph(
     distance_matrix: np.ndarray,
     feature_ids: List[str],
