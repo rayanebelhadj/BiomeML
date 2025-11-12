@@ -1,0 +1,2916 @@
+# ==============================================================================
+# EXPERIMENTS FOR IBD RESEARCH
+# ==============================================================================
+# Run with: pixi run python run_experiments.py --experiments <name> --num-runs 50
+
+# ==============================================================================
+# BASELINE EXPERIMENTS (IBD)
+# ==============================================================================
+
+baseline:
+  name: baseline
+  description: Standard GINEConv with phylogenetic graph
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# DISTANCE MATRIX EXPERIMENTS (Phase 2)
+# ==============================================================================
+
+distance_tree:
+  name: distance_tree
+  description: Use phylogenetic tree distance matrix
+  disease: ibd
+  data_extraction:
+    distance_matrices:
+      primary_matrix: TreeDistMatrix
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+distance_sequence:
+  name: distance_sequence
+  description: Use sequence similarity distance matrix
+  disease: ibd
+  data_extraction:
+    distance_matrices:
+      primary_matrix: SeqDistMatrix
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+distance_graph:
+  name: distance_graph
+  description: Use graph distance matrix
+  disease: ibd
+  data_extraction:
+    distance_matrices:
+      primary_matrix: GraphDistMatrix
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# HYPERPARAMETER EXPERIMENTS (Phase 2)
+# ==============================================================================
+
+hp_hidden_128:
+  name: hp_hidden_128
+  description: Test hidden_dim=128
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 128
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+hp_hidden_256:
+  name: hp_hidden_256
+  description: Test hidden_dim=256
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 256
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+hp_dropout_03:
+  name: hp_dropout_03
+  description: Test dropout=0.3
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+hp_dropout_05:
+  name: hp_dropout_05
+  description: Test dropout=0.5
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+hp_lr_0001:
+  name: hp_lr_0001
+  description: Test learning_rate=0.0001
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.0001
+      num_epochs: 200
+
+hp_lr_001:
+  name: hp_lr_001
+  description: Test learning_rate=0.001
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.001
+      num_epochs: 200
+
+hp_layers_2:
+  name: hp_layers_2
+  description: Test num_layers=2
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 2
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+hp_layers_4:
+  name: hp_layers_4
+  description: Test num_layers=4
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 4
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# CONTROL EXPERIMENTS - Does graph structure help?
+# ==============================================================================
+
+no_graph_mlp:
+  name: no_graph_mlp
+  description: MLP baseline - no graph structure (CONTROL)
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+cnn_baseline:
+  name: cnn_baseline
+  description: CNN baseline - fixed neighborhoods (CONTROL)
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+random_edges:
+  name: random_edges
+  description: Random graph edges - tests if SPECIFIC edges matter (CONTROL)
+  disease: ibd
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+complete_graph:
+  name: complete_graph
+  description: Complete graph - tests if sparsity helps (CONTROL)
+  disease: ibd
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+shuffled_labels:
+  name: shuffled_labels
+  description: Shuffled labels - tests if signal is REAL (CONTROL)
+  disease: ibd
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# GNN ARCHITECTURE COMPARISON
+# ==============================================================================
+
+gnn_gcn:
+  name: gnn_gcn
+  description: Simple GCN (no edge features)
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+gnn_gineconv:
+  name: gnn_gineconv
+  description: GINEConv with edge features
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+gnn_gat:
+  name: gnn_gat
+  description: Graph Attention Network
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+gnn_graphsage:
+  name: gnn_graphsage
+  description: GraphSAGE
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+gnn_edgecentric:
+  name: gnn_edgecentric
+  description: EdgeCentricRGCN (Professor's reference)
+  disease: ibd
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# EDGE WEIGHT STRATEGIES (9 strategies)
+# ==============================================================================
+
+edge_identity:
+  name: edge_identity
+  description: Edge weight = raw distance
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: identity
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_inverse:
+  name: edge_inverse
+  description: Edge weight = 1/distance
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: inverse
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_exponential:
+  name: edge_exponential
+  description: Edge weight = exp(-distance)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: exponential
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_binary:
+  name: edge_binary
+  description: Binary edges (no weights)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: binary
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_abundance_product:
+  name: edge_abundance_product
+  description: Edge weight = (1/d) × a₁ × a₂ (Professor's suggestion)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: abundance_product
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_abundance_geometric:
+  name: edge_abundance_geometric
+  description: Edge weight = (1/d) × sqrt(a₁ × a₂)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: abundance_geometric
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_abundance_log:
+  name: edge_abundance_log
+  description: Edge weight = (1/d) × log(1+a₁) × log(1+a₂)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: abundance_log
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_abundance_min:
+  name: edge_abundance_min
+  description: Edge weight = (1/d) × min(a₁, a₂)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: abundance_min
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+edge_abundance_max:
+  name: edge_abundance_max
+  description: Edge weight = (1/d) × max(a₁, a₂)
+  disease: ibd
+  graph_construction:
+    weights:
+      strategy: abundance_max
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# GRAPH DENSITY (k-NN k value)
+# ==============================================================================
+
+k_5:
+  name: k_5
+  description: Sparse graph (k=5)
+  disease: ibd
+  graph_construction:
+    knn:
+      k: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+k_10:
+  name: k_10
+  description: Medium graph (k=10)
+  disease: ibd
+  graph_construction:
+    knn:
+      k: 10
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+k_15:
+  name: k_15
+  description: Dense graph (k=15)
+  disease: ibd
+  graph_construction:
+    knn:
+      k: 15
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+k_20:
+  name: k_20
+  description: Very dense graph (k=20)
+  disease: ibd
+  graph_construction:
+    knn:
+      k: 20
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# METADATA ABLATION (Late Fusion)
+# ==============================================================================
+
+meta_age:
+  name: meta_age
+  description: Graph + age only
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: false
+        use_bmi: false
+        use_antibiotics: false
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 16
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+meta_sex:
+  name: meta_sex
+  description: Graph + sex only
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: false
+        use_sex: true
+        use_bmi: false
+        use_antibiotics: false
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 16
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+meta_bmi:
+  name: meta_bmi
+  description: Graph + BMI only
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: false
+        use_sex: false
+        use_bmi: true
+        use_antibiotics: false
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 16
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+meta_antibiotics:
+  name: meta_antibiotics
+  description: Graph + antibiotics history only
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: false
+        use_sex: false
+        use_bmi: false
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 16
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+meta_all:
+  name: meta_all
+  description: Graph + all metadata
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-CLASS CLASSIFICATION (IBD)
+# ==============================================================================
+
+ibd_subtypes:
+  name: ibd_subtypes
+  description: "3-class: Crohn's vs Ulcerative Colitis vs Control (GINEConv)"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_gcn:
+  name: ibd_subtypes_gcn
+  description: "3-class IBD subtypes with GCN"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_gat:
+  name: ibd_subtypes_gat
+  description: "3-class IBD subtypes with GAT"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_graphsage:
+  name: ibd_subtypes_graphsage
+  description: "3-class IBD subtypes with GraphSAGE"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_edgecentric:
+  name: ibd_subtypes_edgecentric
+  description: "3-class IBD subtypes with EdgeCentricRGCN"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_cnn:
+  name: ibd_subtypes_cnn
+  description: "3-class IBD subtypes with CNN"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_subtypes_mlp:
+  name: ibd_subtypes_mlp
+  description: "3-class IBD subtypes with MLP"
+  disease: ibd
+  data_extraction:
+    target:
+      type: ibd_subtype
+      num_classes: 3
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 3
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+ibd_age_prediction:
+  name: ibd_age_prediction
+  description: Age prediction from IBD microbiome
+  disease: ibd
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: Baseline for each disease
+# ==============================================================================
+
+diabetes_baseline:
+  name: diabetes_baseline
+  description: Diabetes classification with GINEConv
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_baseline:
+  name: cancer_baseline
+  description: Cancer classification with GINEConv
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_baseline:
+  name: autoimmune_baseline
+  description: Autoimmune classification with GINEConv
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_baseline:
+  name: depression_baseline
+  description: Depression classification with GINEConv
+  disease: depression
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_baseline:
+  name: mental_illness_baseline
+  description: Mental illness classification with GINEConv
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_baseline:
+  name: ptsd_baseline
+  description: PTSD classification with GINEConv
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_baseline:
+  name: arthritis_baseline
+  description: Arthritis classification with GINEConv
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_baseline:
+  name: asthma_baseline
+  description: Asthma classification with GINEConv
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_baseline:
+  name: stomach_bowel_baseline
+  description: Stomach/Bowel classification with GINEConv
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: MLP Control for each disease
+# ==============================================================================
+
+diabetes_mlp:
+  name: diabetes_mlp
+  description: Diabetes MLP baseline (no graph)
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_mlp:
+  name: cancer_mlp
+  description: Cancer MLP baseline (no graph)
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_mlp:
+  name: autoimmune_mlp
+  description: Autoimmune MLP baseline (no graph)
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_mlp:
+  name: depression_mlp
+  description: Depression MLP baseline (no graph)
+  disease: depression
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_mlp:
+  name: mental_illness_mlp
+  description: Mental illness MLP baseline (no graph)
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_mlp:
+  name: ptsd_mlp
+  description: PTSD MLP baseline (no graph)
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_mlp:
+  name: arthritis_mlp
+  description: Arthritis MLP baseline (no graph)
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_mlp:
+  name: asthma_mlp
+  description: Asthma MLP baseline (no graph)
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_mlp:
+  name: stomach_bowel_mlp
+  description: Stomach/Bowel MLP baseline (no graph)
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: Age prediction for each disease
+# ==============================================================================
+
+diabetes_age:
+  name: diabetes_age
+  description: Age prediction from diabetes microbiome
+  disease: diabetes
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_age:
+  name: cancer_age
+  description: Age prediction from cancer microbiome
+  disease: cancer
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_age:
+  name: depression_age
+  description: Age prediction from depression microbiome
+  disease: depression
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_age:
+  name: autoimmune_age
+  description: Age prediction from autoimmune microbiome
+  disease: autoimmune
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_age:
+  name: mental_illness_age
+  description: Age prediction from mental illness microbiome
+  disease: mental_illness
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_age:
+  name: ptsd_age
+  description: Age prediction from PTSD microbiome
+  disease: ptsd
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_age:
+  name: arthritis_age
+  description: Age prediction from arthritis microbiome
+  disease: arthritis
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_age:
+  name: asthma_age
+  description: Age prediction from asthma microbiome
+  disease: asthma
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_age:
+  name: stomach_bowel_age
+  description: Age prediction from stomach/bowel microbiome
+  disease: stomach_bowel
+  data_extraction:
+    target:
+      type: age_category
+      num_classes: 5
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      num_classes: 5
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: All GNN architectures per disease
+# ==============================================================================
+
+# Diabetes - all architectures
+diabetes_gcn:
+  name: diabetes_gcn
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+diabetes_gat:
+  name: diabetes_gat
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+diabetes_graphsage:
+  name: diabetes_graphsage
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+diabetes_edgecentric:
+  name: diabetes_edgecentric
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Cancer - all architectures
+cancer_gcn:
+  name: cancer_gcn
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_gat:
+  name: cancer_gat
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_graphsage:
+  name: cancer_graphsage
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_edgecentric:
+  name: cancer_edgecentric
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Autoimmune - all architectures
+autoimmune_gcn:
+  name: autoimmune_gcn
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_gat:
+  name: autoimmune_gat
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_graphsage:
+  name: autoimmune_graphsage
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_edgecentric:
+  name: autoimmune_edgecentric
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Depression - all architectures
+depression_gcn:
+  name: depression_gcn
+  disease: depression
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_gat:
+  name: depression_gat
+  disease: depression
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_graphsage:
+  name: depression_graphsage
+  disease: depression
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_edgecentric:
+  name: depression_edgecentric
+  disease: depression
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Mental Illness - all architectures
+mental_illness_gcn:
+  name: mental_illness_gcn
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_gat:
+  name: mental_illness_gat
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_graphsage:
+  name: mental_illness_graphsage
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_edgecentric:
+  name: mental_illness_edgecentric
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# PTSD - all architectures
+ptsd_gcn:
+  name: ptsd_gcn
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_gat:
+  name: ptsd_gat
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_graphsage:
+  name: ptsd_graphsage
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_edgecentric:
+  name: ptsd_edgecentric
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Arthritis - all architectures
+arthritis_gcn:
+  name: arthritis_gcn
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_gat:
+  name: arthritis_gat
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_graphsage:
+  name: arthritis_graphsage
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_edgecentric:
+  name: arthritis_edgecentric
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Asthma - all architectures
+asthma_gcn:
+  name: asthma_gcn
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_gat:
+  name: asthma_gat
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_graphsage:
+  name: asthma_graphsage
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_edgecentric:
+  name: asthma_edgecentric
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# Stomach/Bowel - all architectures
+stomach_bowel_gcn:
+  name: stomach_bowel_gcn
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: GCN
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_gat:
+  name: stomach_bowel_gat
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: GAT
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_graphsage:
+  name: stomach_bowel_graphsage
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_edgecentric:
+  name: stomach_bowel_edgecentric
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: CNN Baseline per disease
+# ==============================================================================
+
+diabetes_cnn:
+  name: diabetes_cnn
+  disease: diabetes
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_cnn:
+  name: cancer_cnn
+  disease: cancer
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_cnn:
+  name: autoimmune_cnn
+  disease: autoimmune
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_cnn:
+  name: depression_cnn
+  disease: depression
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_cnn:
+  name: mental_illness_cnn
+  disease: mental_illness
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_cnn:
+  name: ptsd_cnn
+  disease: ptsd
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_cnn:
+  name: arthritis_cnn
+  disease: arthritis
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_cnn:
+  name: asthma_cnn
+  disease: asthma
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_cnn:
+  name: stomach_bowel_cnn
+  disease: stomach_bowel
+  model_training:
+    architecture:
+      model_type: CNN
+      hidden_dim: 64
+      dropout: 0.2
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# MULTI-DISEASE: Control experiments (random edges, complete graph)
+# ==============================================================================
+
+diabetes_random_edges:
+  name: diabetes_random_edges
+  disease: diabetes
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+diabetes_complete_graph:
+  name: diabetes_complete_graph
+  disease: diabetes
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_random_edges:
+  name: cancer_random_edges
+  disease: cancer
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_complete_graph:
+  name: cancer_complete_graph
+  disease: cancer
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_random_edges:
+  name: autoimmune_random_edges
+  disease: autoimmune
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_complete_graph:
+  name: autoimmune_complete_graph
+  disease: autoimmune
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_random_edges:
+  name: depression_random_edges
+  disease: depression
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_complete_graph:
+  name: depression_complete_graph
+  disease: depression
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_random_edges:
+  name: mental_illness_random_edges
+  disease: mental_illness
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_complete_graph:
+  name: mental_illness_complete_graph
+  disease: mental_illness
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_random_edges:
+  name: ptsd_random_edges
+  disease: ptsd
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_complete_graph:
+  name: ptsd_complete_graph
+  disease: ptsd
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_random_edges:
+  name: arthritis_random_edges
+  disease: arthritis
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_complete_graph:
+  name: arthritis_complete_graph
+  disease: arthritis
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_random_edges:
+  name: asthma_random_edges
+  disease: asthma
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_complete_graph:
+  name: asthma_complete_graph
+  disease: asthma
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_random_edges:
+  name: stomach_bowel_random_edges
+  disease: stomach_bowel
+  graph_construction:
+    edge_construction:
+      randomize_edges: true
+      preserve_degree: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_complete_graph:
+  name: stomach_bowel_complete_graph
+  disease: stomach_bowel
+  graph_construction:
+    knn:
+      k: 999
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 8
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# SHUFFLED LABELS CONTROL (All 10 diseases)
+# ==============================================================================
+
+diabetes_shuffled_labels:
+  name: diabetes_shuffled_labels
+  disease: diabetes
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_shuffled_labels:
+  name: cancer_shuffled_labels
+  disease: cancer
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_shuffled_labels:
+  name: autoimmune_shuffled_labels
+  disease: autoimmune
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_shuffled_labels:
+  name: depression_shuffled_labels
+  disease: depression
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_shuffled_labels:
+  name: mental_illness_shuffled_labels
+  disease: mental_illness
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_shuffled_labels:
+  name: ptsd_shuffled_labels
+  disease: ptsd
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_shuffled_labels:
+  name: arthritis_shuffled_labels
+  disease: arthritis
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_shuffled_labels:
+  name: asthma_shuffled_labels
+  disease: asthma
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_shuffled_labels:
+  name: stomach_bowel_shuffled_labels
+  disease: stomach_bowel
+  data_extraction:
+    shuffle_labels: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# METADATA ABLATION: Metadata-only baseline (all 10 diseases)
+# ==============================================================================
+
+ibd_metadata_only:
+  name: ibd_metadata_only
+  description: Metadata only - no microbiome (CONTROL)
+  disease: ibd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+diabetes_metadata_only:
+  name: diabetes_metadata_only
+  disease: diabetes
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_metadata_only:
+  name: cancer_metadata_only
+  disease: cancer
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_metadata_only:
+  name: autoimmune_metadata_only
+  disease: autoimmune
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_metadata_only:
+  name: depression_metadata_only
+  disease: depression
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_metadata_only:
+  name: mental_illness_metadata_only
+  disease: mental_illness
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_metadata_only:
+  name: ptsd_metadata_only
+  disease: ptsd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_metadata_only:
+  name: arthritis_metadata_only
+  disease: arthritis
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_metadata_only:
+  name: asthma_metadata_only
+  disease: asthma
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_metadata_only:
+  name: stomach_bowel_metadata_only
+  disease: stomach_bowel
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: MLP
+      hidden_dim: 32
+      num_layers: 2
+      dropout: 0.2
+      use_microbiome: false
+    training:
+      batch_size: 32
+      learning_rate: 0.01
+      num_epochs: 200
+
+# ==============================================================================
+# METADATA ABLATION: GNN + Metadata (all 9 other diseases)
+# ==============================================================================
+
+diabetes_gnn_meta:
+  name: diabetes_gnn_meta
+  disease: diabetes
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+cancer_gnn_meta:
+  name: cancer_gnn_meta
+  disease: cancer
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+autoimmune_gnn_meta:
+  name: autoimmune_gnn_meta
+  disease: autoimmune
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+depression_gnn_meta:
+  name: depression_gnn_meta
+  disease: depression
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+mental_illness_gnn_meta:
+  name: mental_illness_gnn_meta
+  disease: mental_illness
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+ptsd_gnn_meta:
+  name: ptsd_gnn_meta
+  disease: ptsd
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+arthritis_gnn_meta:
+  name: arthritis_gnn_meta
+  disease: arthritis
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+asthma_gnn_meta:
+  name: asthma_gnn_meta
+  disease: asthma
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
+
+stomach_bowel_gnn_meta:
+  name: stomach_bowel_gnn_meta
+  disease: stomach_bowel
+  data_extraction:
+    clinical_features:
+      enable: true
+      features:
+        use_age: true
+        use_sex: true
+        use_bmi: true
+        use_antibiotics: true
+  model_training:
+    architecture:
+      model_type: GINEConv
+      hidden_dim: 64
+      num_layers: 3
+      dropout: 0.2
+      use_clinical_features: true
+      clinical_hidden_dim: 32
+    training:
+      batch_size: 16
+      learning_rate: 0.01
+      num_epochs: 200
