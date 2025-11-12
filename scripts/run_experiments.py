@@ -75,8 +75,12 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     config_path = exp_output_dir / "config.yaml"
     save_yaml(full_config, config_path)
 
-    # BUG: disease hardcoded instead of read from config
-    disease = 'IBD'
+    disease = full_config.get('disease') or full_config.get('data_extraction', {}).get('disease', 'IBD')
+    disease = disease.upper()
+
+    if "disease_criteria" not in full_config["data_extraction"]:
+        full_config["data_extraction"]["disease_criteria"] = {}
+    full_config["data_extraction"]["disease_criteria"]["disease"] = disease
 
     full_config['data_extraction']['output']['base_dir'] = str(notebooks_dir / f"{disease}_analysis_output")
     full_config['output_dir'] = str(exp_output_dir)
