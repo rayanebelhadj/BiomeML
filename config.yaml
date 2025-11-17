@@ -89,8 +89,8 @@ graph_construction:
 
 model_training:
   dataset:
-    test_size: 0.25
-    val_size: 0.25
+    test_size: 0.15
+    val_size: 0.15
     random_seed: 42
     stratify: true
 
