@@ -2,6 +2,8 @@ baseline:
   name: baseline
   disease: ibd
   description: GINEConv baseline with k=10, Pearson correlation graph
+  graph_construction:
+    graph_type: knn
   model_training:
     architecture:
       model_type: GINEConv
