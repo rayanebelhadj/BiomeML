@@ -363,8 +363,8 @@ class GNN_GINEConv(nn.Module):
 
 class EdgeCentricRGCN(nn.Module):
     """
-    Edge-centric model based on professor's reference notebooks.
-    Uses GINEConv with node weights (abundance) and edge weights (distance).
+    Edge-centric model inspired by professor's reference notebooks.
+    Uses two GINEConv layers with separate node/edge encoders.
     """
     
     def __init__(
