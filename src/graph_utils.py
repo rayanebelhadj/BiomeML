@@ -340,8 +340,8 @@ def build_threshold_graph(
 
 
 def build_hierarchical_graph(
-    abundance_df,  # pandas DataFrame: samples x taxa
-    taxonomy_df,   # pandas DataFrame: taxa -> taxonomic levels
+    abundance_df,  # pd.DataFrame: samples x taxa
+    taxonomy_df,   # pd.DataFrame: taxa with taxonomic level columns
     aggregation_level: str = 'genus',
     min_abundance: float = 0.001
 ) -> Tuple[nx.Graph, Dict]:
