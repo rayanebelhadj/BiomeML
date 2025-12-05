@@ -122,7 +122,7 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
             if pixi_path:
                 cmd = [pixi_path, "run", "python", "-m", "nbconvert", "--to", "notebook",
                        "--execute", str(notebook_path), "--output", str(output_notebook),
-                       "--ExecutePreprocessor.timeout=7200"]
+                       "--ExecutePreprocessor.timeout=28800"]
             else:
                 cmd = ["python", "-m", "nbconvert", "--to", "notebook", "--execute",
                        str(notebook_path), "--output", str(output_notebook),
