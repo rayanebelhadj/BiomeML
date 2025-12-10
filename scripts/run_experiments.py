@@ -409,6 +409,7 @@ def run_multiple_experiments(
             json.dump(run_result, f, indent=2)
         all_run_results.append(run_result)
         
+        # Clean up pytorch geometric cache to avoid disk-full errors
         pt_cache = first_run_dir / "pytorch_geometric"
         if pt_cache.exists():
             import shutil
