@@ -665,7 +665,10 @@ def create_comparison_table(all_results: List[Dict], output_path: Path):
     df = pd.DataFrame(rows)
     
     if 'test_accuracy' in df.columns:
-        df = df.sort_values('test_accuracy', ascending=False)
+        df['_sort_key'] = df['test_accuracy'].apply(
+            lambda x: x.get('mean', 0) if isinstance(x, dict) else (float(x) if x is not None else 0)
+        )
+        df = df.sort_values('_sort_key', ascending=False).drop(columns=['_sort_key'])
     
     df.to_csv(output_path, index=False)
     print(f"Saved comparison table to: {output_path}")
