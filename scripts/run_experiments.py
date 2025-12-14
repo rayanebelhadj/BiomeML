@@ -305,7 +305,7 @@ def run_multiple_experiments(
                     })
                     continue
             except Exception:
-                print(f"      Run {run_idx + 1} has invalid results, re-running")
+                print(f"      Run {run_idx + 1} has invalid results file, will re-run")
         
         runs_to_execute.append((run_idx, run_seed, run_output_dir))
     
