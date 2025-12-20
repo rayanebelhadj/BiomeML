@@ -31,6 +31,11 @@ data_extraction:
     bmi_categories: ["Underweight", "Normal", "Overweight", "Obese"]
     random_seed: 42
 
+  feature_filtering:
+    enable: true
+    min_prevalence: 0.001
+    min_total_abundance: 0.001
+
   distance_matrices:
     use_tree_distance: true
     use_sequence_distance: false
