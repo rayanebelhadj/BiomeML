@@ -175,3 +175,25 @@ gat_t2d:
   model_training:
     architecture:
       model_type: GAT
+
+edge_abundance_product:
+  name: edge_abundance_product
+  disease: ibd
+  description: Edge weight strategy abundance_product
+  graph_construction:
+    weights:
+      weight_transform: abundance_product
+edge_abundance_geometric:
+  name: edge_abundance_geometric
+  disease: ibd
+  description: Edge weight strategy abundance_geometric
+  graph_construction:
+    weights:
+      weight_transform: abundance_geometric
+edge_abundance_log:
+  name: edge_abundance_log
+  disease: ibd
+  description: Edge weight strategy abundance_log
+  graph_construction:
+    weights:
+      weight_transform: abundance_log
