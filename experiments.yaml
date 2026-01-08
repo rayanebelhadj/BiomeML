@@ -197,3 +197,22 @@ edge_abundance_log:
   graph_construction:
     weights:
       weight_transform: abundance_log
+
+shuffle_labels_ibd:
+  name: shuffle_labels_ibd
+  disease: ibd
+  description: Shuffled labels control for IBD - should give ~50pct accuracy
+  model_training:
+    architecture:
+      model_type: GINEConv
+    training:
+      shuffle_labels: true
+shuffle_labels_t2d:
+  name: shuffle_labels_t2d
+  disease: t2d
+  description: Shuffled labels control for T2D
+  model_training:
+    architecture:
+      model_type: GINEConv
+    training:
+      shuffle_labels: true
