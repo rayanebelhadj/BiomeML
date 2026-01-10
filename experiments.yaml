@@ -216,3 +216,21 @@ shuffle_labels_t2d:
       model_type: GINEConv
     training:
       shuffle_labels: true
+
+gnn_meta_ibd:
+  name: gnn_meta_ibd
+  disease: ibd
+  description: GNN with patient metadata (late fusion)
+  model_training:
+    architecture:
+      model_type: GNN_Meta
+    architecture_meta:
+      use_clinical_features: true
+      meta_hidden_dim: 32
+no_graph_mlp:
+  name: no_graph_mlp
+  disease: ibd
+  description: MLP baseline - no graph structure
+  model_training:
+    architecture:
+      model_type: MLP
