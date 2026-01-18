@@ -79,7 +79,8 @@ def compute_edge_weights_for_graph(edges: list, distances: dict, abundances: dic
     weights = {}
     needs_abundance = strategy.startswith('abundance_')
     for n1, n2 in edges:
-        dist = distances.get((n1, n2)) or distances.get((n2, n1), 1.0)
+        d = distances.get((n1, n2))
+        dist = d if d is not None else distances.get((n2, n1), 1.0)
         if needs_abundance:
             a1 = abundances.get(n1, 0.0)
             a2 = abundances.get(n2, 0.0)
