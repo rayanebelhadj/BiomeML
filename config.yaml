@@ -142,7 +142,7 @@ model_training:
   evaluation:
     enable_cross_validation: true
     n_folds: 5
-    num_runs_per_experiment: 50
+    num_runs_per_experiment: 10
     report_confidence_intervals: true
     significance_level: 0.05
     multiple_testing_correction: "bonferroni"

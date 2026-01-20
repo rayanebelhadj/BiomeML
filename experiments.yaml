@@ -234,3 +234,12 @@ no_graph_mlp:
   model_training:
     architecture:
       model_type: MLP
+
+# New batch - cross-disease comparison
+baseline_ages:
+  name: baseline_ages
+  disease: ages
+  description: GINEConv baseline for AGES cohort
+  model_training:
+    architecture:
+      model_type: GINEConv
