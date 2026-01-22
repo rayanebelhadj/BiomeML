@@ -101,12 +101,19 @@ def load_features(experiment_config, output_dir):
                     clinical_df = None
                     
             except Exception as e:
-                print(f"Error loading clinical features: {e}")
-                use_clinical = False
-                clinical_df = None
+                raise RuntimeError(
+                    f"Clinical features were enabled (use_clinical=True) but "
+                    f"failed to load from {metadata_path}: {e}\n"
+                    f"Set clinical_features.enable=false in config to skip, "
+                    f"or fix the metadata file."
+                ) from e
         else:
-            print(f"Metadata file not found: {metadata_path}")
-            use_clinical = False
+            raise FileNotFoundError(
+                f"Clinical features were enabled (use_clinical=True) but "
+                f"metadata file not found: {metadata_path}\n"
+                f"Run 01_data_extraction first, or set "
+                f"clinical_features.enable=false in config."
+            )
     
     return {
         'use_clinical': use_clinical,
