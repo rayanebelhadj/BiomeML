@@ -308,6 +308,8 @@ def build_threshold_graph(
     nx.Graph
         Graph where edges connect pairs with distance < threshold
     """
+    if not feature_ids:
+        return nx.Graph()
     n = len(feature_ids)
     assert distance_matrix.shape == (n, n), "Distance matrix shape mismatch"
     
