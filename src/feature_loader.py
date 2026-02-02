@@ -4,27 +4,26 @@ from pathlib import Path
 
 
 def load_features(experiment_config, output_dir):
+    if experiment_config is None:
+        raise ValueError(
+            "experiment_config must not be None. "
+            "Provide a valid config dict to load_features()."
+        )
+    
     use_clinical = False
     clinical_dim = 0
     clinical_df = None
     
-    if experiment_config is None:
-        return {
-            'use_clinical': use_clinical,
-            'clinical_dim': clinical_dim,
-            'clinical': clinical_df
-        }
+    de_config = experiment_config['data_extraction']
+    clinical_config = de_config['clinical_features']
     
-    de_config = experiment_config.get('data_extraction', {})
-    clinical_config = de_config.get('clinical_features', {})
+    mt_config = experiment_config['model_training']
+    arch_config = mt_config['architecture']
     
-    mt_config = experiment_config.get('model_training', {})
-    arch_config = mt_config.get('architecture', {})
-    
-    use_clinical = clinical_config.get('enable', False) or arch_config.get('use_clinical_features', False)
+    use_clinical = clinical_config['enable'] or arch_config['use_clinical_features']
     
     if use_clinical:
-        disease = de_config.get('disease', 'IBD').upper()
+        disease = experiment_config['data_extraction']['disease_criteria']['disease'].upper()
         metadata_path = Path(output_dir) / "metadata" / f"AGP_{disease}_metadata.txt"
         
         if metadata_path.exists():
@@ -33,11 +32,11 @@ def load_features(experiment_config, output_dir):
                 
                 clinical_columns = []
                 
-                features_config = clinical_config.get('features', {})
-                include_age = features_config.get('use_age', True)
-                include_sex = features_config.get('use_sex', True)
-                include_bmi = features_config.get('use_bmi', True)
-                include_antibiotics = features_config.get('use_antibiotics', False)
+                features_config = clinical_config['features']
+                include_age = features_config['use_age']
+                include_sex = features_config['use_sex']
+                include_bmi = features_config['use_bmi']
+                include_antibiotics = features_config['use_antibiotics']
                 
                 if include_age:
                     for age_col in ['age_cat', 'age_years', 'age']:
