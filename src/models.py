@@ -168,10 +168,7 @@ class MLP_Baseline(nn.Module):
 
 
 class GNN_GCN(nn.Module):
-    """
-    Basic GCN - uses graph structure but NOT edge features.
-    Good baseline for comparison.
-    """
+    """Basic GCN - uses graph structure but NOT edge features."""
     
     def __init__(
         self, 
@@ -263,7 +260,7 @@ class GNN_GCN(nn.Module):
 
 
 class GNN_GINEConv(nn.Module):
-    """GIN with edge features - more expressive, uses phylogenetic distances."""
+    """GINEConv - edge-featured GIN for phylogenetic graphs."""
     
     def __init__(
         self, 
@@ -609,7 +606,7 @@ class GNN_GAT(nn.Module):
 
 
 class GNN_GraphSAGE(nn.Module):
-    """GraphSAGE - good for inductive learning on new graphs."""
+    """GraphSAGE - inductive GNN without edge features."""
     
     def __init__(
         self, 
