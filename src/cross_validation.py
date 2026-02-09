@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.loader import DataLoader
+from src.models import get_loss, WeightedBCELoss
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, roc_auc_score, balanced_accuracy_score
 from scipy.stats import ttest_rel
@@ -41,6 +42,12 @@ def train_epoch(model, loader, optimizer, criterion, device, num_classes=2):
             loss = criterion(out, batch.y)
         else:
             loss = criterion(out, batch.y.long())
+        
+        if not torch.isfinite(loss):
+            raise RuntimeError(
+                f"NaN/Inf loss detected during training (loss={loss.item()}). "
+                f"Check learning rate, input data, or model architecture."
+            )
         
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -130,7 +137,7 @@ def train_single_fold(
     )
     
     # Create loaders
-    batch_size = training_params.get('batch_size', 16)
+    batch_size = training_params['batch_size']
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     
@@ -138,18 +145,31 @@ def train_single_fold(
     model = model_class(**model_params).to(device)
     
     # Setup training
-    lr = training_params.get('learning_rate', 0.001)
-    weight_decay = training_params.get('weight_decay', 1e-5)
+    lr = training_params['learning_rate']
+    weight_decay = training_params['weight_decay']
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     
+    loss_cfg = training_params['loss']
+    if isinstance(loss_cfg, dict):
+        loss_type = loss_cfg['type']
+    else:
+        raise ValueError(
+            f"training_params['loss'] must be a dict with at least a 'type' key, got: {type(loss_cfg)}"
+        )
+    loss_kwargs = {k: v for k, v in loss_cfg.items() if k != 'type'}
+    if 'focal_gamma' in loss_kwargs:
+        loss_kwargs['gamma'] = loss_kwargs.pop('focal_gamma')
+
     if num_classes == 2:
-        criterion = nn.BCELoss()
+        if loss_type == 'weighted_bce':
+            loss_kwargs['pos_weight'] = WeightedBCELoss.compute_pos_weight(train_labels)
+        criterion = get_loss(loss_type, **loss_kwargs) if loss_type in ('bce', 'focal', 'weighted_bce') else get_loss('bce')
     else:
         criterion = nn.CrossEntropyLoss()
     
     # Training loop
-    num_epochs = training_params.get('num_epochs', 200)
-    patience = training_params.get('early_stopping_patience', 30)
+    num_epochs = training_params['num_epochs']
+    patience = training_params['early_stopping_patience']
     
     best_val_loss = float('inf')
     best_model_state = None
@@ -261,13 +281,31 @@ def run_kfold_experiment(
     if dataset_kwargs is None:
         dataset_kwargs = {}
     
-    # Import dataset class if not provided
     if dataset_class is None:
-        # This will need to be imported from the notebook context
         raise ValueError("dataset_class must be provided")
+    if len(graphs) == 0:
+        raise ValueError("graphs list is empty")
+    if len(labels) == 0:
+        raise ValueError("labels array is empty")
+    if len(graphs) != len(labels):
+        raise ValueError(
+            f"graphs ({len(graphs)}) and labels ({len(labels)}) must have same length"
+        )
     
     graphs = np.array(graphs, dtype=object)
     labels = np.array(labels)
+    
+    unique_classes = np.unique(labels)
+    if len(unique_classes) < 2:
+        raise ValueError(
+            f"labels must contain at least 2 classes, got {len(unique_classes)}: {unique_classes}"
+        )
+    if n_folds < 2:
+        raise ValueError(f"n_folds must be >= 2, got {n_folds}")
+    if n_folds > len(labels):
+        raise ValueError(
+            f"n_folds ({n_folds}) cannot exceed number of samples ({len(labels)})"
+        )
     
     skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_seed)
     
