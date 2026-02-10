@@ -243,3 +243,23 @@ baseline_ages:
   model_training:
     architecture:
       model_type: GINEConv
+
+random_forest_ibd:
+  name: random_forest_ibd
+  disease: ibd
+  description: Random forest baseline on abundance features
+  model_training:
+    architecture:
+      model_type: RandomForest
+    training:
+      n_estimators: 100
+xgboost_ibd:
+  name: xgboost_ibd
+  disease: ibd
+  description: XGBoost baseline on abundance features
+  model_training:
+    architecture:
+      model_type: XGBoost
+    training:
+      n_estimators: 100
+      max_depth: 6
