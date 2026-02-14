@@ -115,10 +115,22 @@ def _convert_batch_parallel(nx_graphs: List, device: str, verbose: bool = False)
                 edge_attr = torch.zeros((0, 1), dtype=torch.float32, device=device)
             
             # Move back to CPU for storage (saves GPU memory)
+            x_cpu = x.cpu()
+            edge_attr_cpu = edge_attr.cpu()
+            if not torch.isfinite(x_cpu).all():
+                raise ValueError(
+                    f"Non-finite values in node features (x) for graph with "
+                    f"{n_nodes} nodes"
+                )
+            if edge_attr_cpu.numel() > 0 and not torch.isfinite(edge_attr_cpu).all():
+                raise ValueError(
+                    f"Non-finite values in edge attributes for graph with "
+                    f"{n_edges} edges"
+                )
             data = Data(
-                x=x.cpu(),
+                x=x_cpu,
                 edge_index=edge_index.cpu(),
-                edge_attr=edge_attr.cpu()
+                edge_attr=edge_attr_cpu
             )
             batch_pyg.append(data)
             

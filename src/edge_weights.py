@@ -84,9 +84,15 @@ def compute_edge_weights_for_graph(edges: list, distances: dict, abundances: dic
         if needs_abundance:
             a1 = abundances.get(n1, 0.0)
             a2 = abundances.get(n2, 0.0)
-            weights[(n1, n2)] = weight_fn(dist, a1, a2)
+            w = weight_fn(dist, a1, a2)
         else:
-            weights[(n1, n2)] = weight_fn(dist)
+            w = weight_fn(dist)
+        if not np.isfinite(w):
+            raise ValueError(
+                f"Non-finite weight {w} for edge ({n1}, {n2}) with "
+                f"strategy='{strategy}', distance={dist}"
+            )
+        weights[(n1, n2)] = w
     return weights
 
 

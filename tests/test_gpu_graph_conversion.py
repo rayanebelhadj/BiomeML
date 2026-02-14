@@ -84,7 +84,8 @@ class TestNxToPygConversion:
         G.add_edge(0, 1, weight=0.777)
         results = nx_to_pyg_gpu_batch([G], use_gpu=False)
         data = results[0]
-        assert 0.777 in data.edge_attr.squeeze().tolist()
+        weights = data.edge_attr.squeeze().tolist()
+        assert any(abs(w - 0.777) < 1e-3 for w in weights)
 
     def test_string_node_names(self):
         """Real pipeline uses ASV sequence strings as node names."""
