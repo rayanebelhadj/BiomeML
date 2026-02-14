@@ -589,7 +589,7 @@ def aggregate_multi_run_results(all_run_results: List[Dict], run_metrics: List[D
         return aggregated
     
     for metric_name in ['test_accuracy', 'test_auc', 'test_balanced_accuracy']:
-        values = [m[metric_name] for m in run_metrics]
+        values = [m[metric_name] for m in run_metrics if m.get(metric_name) is not None]
         
         if values:
             values = np.array(values)
