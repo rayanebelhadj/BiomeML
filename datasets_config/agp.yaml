@@ -1,0 +1,73 @@
+# American Gut Project Dataset Configuration
+# Uses specialized loader (loader: agp) for BIOM-specific handling
+
+dataset_name: "agp"
+data_dir: "data"
+loader: "agp"
+
+biom_file: "AGP.data.biom"
+metadata_file: "AGP-metadata.tsv"
+phylogeny_file: "2024.09.phylogeny.asv.nwk"
+
+min_reads_per_sample: 1000
+min_feature_prevalence: 0.001
+
+# Column mappings: raw metadata column -> standard name
+columns:
+  sample_id: null               # first column / index
+  age: "age_years"
+  sex: "sex"
+  bmi: "bmi"
+
+# Condition definitions (used by ConfigDrivenDataset if loader is removed)
+conditions:
+  IBD:
+    column: "ibd"
+    case_values: ["diagnosed by a medical professional (doctor, physician assistant)",
+                  "diagnosed by an alternative medicine practitioner",
+                  "self-diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Diabetes:
+    column: "diabetes"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Cancer:
+    column: "cancer"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Autoimmune:
+    column: "autoimmune"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Depression:
+    column: "depression"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Mental_Illness:
+    column: "mental_illness"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  PTSD:
+    column: "ptsd"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Arthritis:
+    column: "arthritis"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Asthma:
+    column: "asthma"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+  Stomach_Bowel:
+    column: "stomach_bowel"
+    case_values: ["diagnosed", "yes", "true", "1"]
+    control_values: ["i do not have this condition", "no", "false", "0"]
+
+matching:
+  enabled: true
+  match_on: [age_years, bmi]
+  max_controls_per_case: 1
+  tolerance:
+    age_years: 5
+    bmi: 3

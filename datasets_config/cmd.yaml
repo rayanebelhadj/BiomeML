@@ -1,0 +1,82 @@
+# curatedMetagenomicData Configuration
+# Uses specialized loader (loader: cmd) for multi-study handling
+# Reference: Pasolli et al. 2017 Nature Methods
+
+dataset_name: "cmd"
+data_dir: "data"
+loader: "cmd"
+
+abundance_file: "merged_abundance.tsv"
+metadata_file: "merged_metadata.tsv"
+taxonomic_level: "species"
+
+# Column mappings: raw metadata column -> standard name
+columns:
+  sample_id: null                    # first column / index
+  age: "age"
+  sex: "gender"
+  bmi: "BMI"
+  body_site: "body_site"
+  study: "study_name"
+  disease_status: "study_condition"  # primary disease column
+
+# Condition definitions (used by ConfigDrivenDataset if loader is removed)
+conditions:
+  CRC:
+    column: "study_condition"
+    case_values: ["crc", "colorectal cancer", "adenoma", "carcinoma"]
+    control_values: ["control", "healthy"]
+  IBD:
+    column: "study_condition"
+    case_values: ["ibd", "cd", "uc"]
+    control_values: ["control", "healthy"]
+  T2D:
+    column: "study_condition"
+    case_values: ["t2d", "type 2 diabetes"]
+    control_values: ["control", "healthy", "ngt"]
+  Cirrhosis:
+    column: "study_condition"
+    case_values: ["cirrhosis"]
+    control_values: ["control", "healthy"]
+  Obesity:
+    column: "study_condition"
+    case_values: ["obese", "obesity"]
+    control_values: ["control", "lean", "healthy"]
+
+studies:
+  - name: "ZellerG_2014"
+    disease: "CRC"
+    samples: 199
+  - name: "YuJ_2015"
+    disease: "CRC"
+    samples: 128
+  - name: "FengQ_2015"
+    disease: "CRC"
+    samples: 154
+  - name: "VogtmannE_2016"
+    disease: "CRC"
+    samples: 104
+  - name: "ThomasAM_2019"
+    disease: "CRC"
+    samples: 80
+  - name: "NielsenHB_2014"
+    disease: "IBD"
+    samples: 396
+  - name: "HallAB_2017"
+    disease: "IBD"
+    samples: 310
+  - name: "LloydPriceJ_2019"
+    disease: "IBD"
+    samples: 1338
+  - name: "QinJ_2012"
+    disease: "T2D"
+    samples: 368
+  - name: "KarlssonFH_2013"
+    disease: "T2D"
+    samples: 145
+  - name: "QinN_2014"
+    disease: "Cirrhosis"
+    samples: 237
+  - name: "LeChatelierE_2013"
+    disease: "Obesity"
+    samples: 292

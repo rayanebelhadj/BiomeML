@@ -1,6 +1,12 @@
-# BiomeML - Multi-Disease Microbiome Analysis Configuration
-# This file centralizes all configurable parameters for the entire pipeline
-# Default disease: IBD (can be changed via experiments.yaml or environment)
+# BiomeML - Multi-Dataset Microbiome Analysis Configuration
+# Supports multiple datasets: AGP, CMD (curatedMetagenomicData), HMP, Custom
+
+# =============================================================================
+# DATASET SELECTION
+# =============================================================================
+dataset:
+  name: "agp"                           # Options: agp, cmd, hmp, custom
+  config_file: "datasets_config/agp.yaml"
 
 # =============================================================================
 # DATA EXTRACTION SETTINGS (Notebook 01)
