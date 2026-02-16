@@ -36,6 +36,24 @@ def merge_configs(base_config: Dict, override_config: Dict) -> Dict:
     return result
 
 
+def _extract_disease(config: Dict, experiment_override: Dict) -> str:
+    """Extract the disease from experiment override or merged config. Never falls back silently."""
+    disease = experiment_override.get('disease')
+    if disease:
+        return disease.upper()
+
+    try:
+        return config['data_extraction']['disease_criteria']['disease'].upper()
+    except (KeyError, TypeError):
+        pass
+
+    raise ValueError(
+        "Cannot determine disease: not found in experiment config ('disease' key) "
+        "or in base config ('data_extraction.disease_criteria.disease'). "
+        "Every experiment must specify a disease."
+    )
+
+
 def expand_grid_search(grid_config: Dict) -> List[Dict]:
     parameters = grid_config.get('parameters', {})
     fixed = grid_config.get('fixed', {})
@@ -104,8 +122,7 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     save_yaml(full_config, config_path)
     print(f"Saved config to: {config_path}")
     
-    disease = full_config.get('disease') or full_config.get('data_extraction', {}).get('disease', 'IBD')
-    disease = disease.upper()
+    disease = _extract_disease(full_config, config)
     
     if "disease_criteria" not in full_config["data_extraction"]:
         full_config["data_extraction"]["disease_criteria"] = {}
@@ -115,9 +132,6 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     full_config['output_dir'] = str(exp_output_dir)
     
     save_yaml(full_config, config_path)
-    
-    temp_config_path = Path("config_temp.yaml")
-    save_yaml(full_config, temp_config_path)
     
     if pixi_path:
         cmd_prefix = [pixi_path, "run"]
@@ -225,42 +239,38 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)
     
-    try:
-        eval_results_path = exp_output_dir / "results" / "evaluation_results.json"
-        
-        if not eval_results_path.exists():
-            eval_results_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
-        
-        if eval_results_path.exists():
-            with open(eval_results_path, 'r') as f:
-                eval_results = json.load(f)
-            
-            exp_eval_path = exp_output_dir / "evaluation_results.json"
-            with open(exp_eval_path, 'w') as f:
-                json.dump(eval_results, f, indent=2)
-            
-            eval_results_path.unlink()
-            
-            results['metrics'] = eval_results
-            print(f"\nFinal Metrics:")
-            
-            test_acc = eval_results.get('test_accuracy', None)
-            test_auc = eval_results.get('test_auc_roc', None)
-            
-            if test_acc is not None and isinstance(test_acc, (int, float)):
-                print(f"   Test Accuracy: {test_acc:.4f}")
-            else:
-                print(f"   Test Accuracy: {test_acc if test_acc is not None else 'N/A'}")
-            
-            if test_auc is not None and isinstance(test_auc, (int, float)):
-                print(f"   Test AUC-ROC: {test_auc:.4f}")
-            else:
-                print(f"   Test AUC-ROC: {test_auc if test_auc is not None else 'N/A'}")
-    except Exception as e:
-        print(f"   Could not extract metrics: {e}")
+    eval_results_path = exp_output_dir / "results" / "evaluation_results.json"
     
-    if temp_config_path.exists():
-        temp_config_path.unlink()
+    if not eval_results_path.exists():
+        eval_results_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
+    
+    if eval_results_path.exists():
+        with open(eval_results_path, 'r') as f:
+            eval_results = json.load(f)
+        
+        exp_eval_path = exp_output_dir / "evaluation_results.json"
+        with open(exp_eval_path, 'w') as f:
+            json.dump(eval_results, f, indent=2)
+        
+        eval_results_path.unlink()
+        
+        results['metrics'] = eval_results
+        print(f"\nFinal Metrics:")
+        
+        test_acc = eval_results.get('test_accuracy', None)
+        test_auc = eval_results.get('test_auc_roc', None)
+        
+        if test_acc is not None and isinstance(test_acc, (int, float)):
+            print(f"   Test Accuracy: {test_acc:.4f}")
+        else:
+            print(f"   Test Accuracy: {test_acc if test_acc is not None else 'N/A'}")
+        
+        if test_auc is not None and isinstance(test_auc, (int, float)):
+            print(f"   Test AUC-ROC: {test_auc:.4f}")
+        else:
+            print(f"   Test AUC-ROC: {test_auc if test_auc is not None else 'N/A'}")
+    else:
+        print(f"   WARNING: No evaluation_results.json found for {exp_name}")
     
     return results
 
@@ -278,8 +288,7 @@ def run_multiple_experiments(
     all_run_results = []
     run_metrics = []
     
-    disease = config.get('disease') or config.get('data_extraction', {}).get('disease', 'IBD')
-    disease = disease.upper()
+    disease = _extract_disease(full_config, config)
     
     runs_to_execute = []
     
@@ -304,8 +313,8 @@ def run_multiple_experiments(
                         'end_time': datetime.now().isoformat()
                     })
                     continue
-            except Exception:
-                print(f"      Run {run_idx + 1} has invalid results file, will re-run")
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"      Run {run_idx + 1} has invalid results file ({e}), will re-run")
         
         runs_to_execute.append((run_idx, run_seed, run_output_dir))
     
@@ -339,9 +348,6 @@ def run_multiple_experiments(
         
         config_path = first_run_dir / "config.yaml"
         save_yaml(first_full_config, config_path)
-        
-        temp_config_path = Path("config_temp.yaml")
-        save_yaml(first_full_config, temp_config_path)
         
         data_extraction_output = notebooks_dir / f"{disease}_analysis_output"
         skip_data_extraction = (
@@ -414,9 +420,6 @@ def run_multiple_experiments(
         if pt_cache.exists():
             import shutil
             shutil.rmtree(pt_cache, ignore_errors=True)
-        
-        if temp_config_path.exists():
-            temp_config_path.unlink()
         
         if not pipeline_ok:
             print(f"   Pipeline failed on first run, skipping remaining runs")
@@ -547,38 +550,36 @@ def run_multiple_experiments(
 
 
 def _extract_run_metrics(run_result, run_dir, notebooks_dir, disease, run_metrics):
-    try:
-        eval_path = run_dir / "results" / "evaluation_results.json"
-        
-        if not eval_path.exists():
-            eval_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
-        
-        if eval_path.exists():
-            with open(eval_path, 'r') as f:
-                eval_results = json.load(f)
-            run_result['metrics'] = eval_results
-            run_metrics.append({
-                'test_accuracy': eval_results.get('test_accuracy'),
-                'test_auc': eval_results.get('test_auc_roc'),
-                'test_balanced_accuracy': eval_results.get('test_balanced_accuracy'),
-                'run_idx': run_result['run_idx'],
-                'seed': run_result['seed']
-            })
-            with open(run_dir / "evaluation_results.json", 'w') as f:
-                json.dump(eval_results, f, indent=2)
-            shared_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
-            if shared_path.exists():
-                shared_path.unlink()
-    except Exception as e:
-        print(f"      Could not extract metrics: {e}")
+    eval_path = run_dir / "results" / "evaluation_results.json"
+    
+    if not eval_path.exists():
+        eval_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
+    
+    if eval_path.exists():
+        with open(eval_path, 'r') as f:
+            eval_results = json.load(f)
+        run_result['metrics'] = eval_results
+        run_metrics.append({
+            'test_accuracy': eval_results.get('test_accuracy'),
+            'test_auc': eval_results.get('test_auc_roc'),
+            'test_balanced_accuracy': eval_results.get('test_balanced_accuracy'),
+            'run_idx': run_result['run_idx'],
+            'seed': run_result['seed']
+        })
+        with open(run_dir / "evaluation_results.json", 'w') as f:
+            json.dump(eval_results, f, indent=2)
+        shared_path = notebooks_dir / f"{disease}_analysis_output" / "results" / "evaluation_results.json"
+        if shared_path.exists():
+            shared_path.unlink()
+    else:
+        print(f"      WARNING: No evaluation_results.json found for run {run_result.get('run_idx', '?')}")
 
 
 
 def aggregate_multi_run_results(all_run_results: List[Dict], run_metrics: List[Dict]) -> Dict:
     import numpy as np
     from scipy import stats
-    import subprocess
-    
+
     aggregated = {
         'start_time': all_run_results[0].get('start_time') if all_run_results else None,
         'end_time': all_run_results[-1].get('end_time') if all_run_results else None,
@@ -589,7 +590,7 @@ def aggregate_multi_run_results(all_run_results: List[Dict], run_metrics: List[D
         return aggregated
     
     for metric_name in ['test_accuracy', 'test_auc', 'test_balanced_accuracy']:
-        values = [m[metric_name] for m in run_metrics]
+        values = [m[metric_name] for m in run_metrics if m.get(metric_name) is not None]
         
         if values:
             values = np.array(values)
@@ -616,7 +617,7 @@ def aggregate_multi_run_results(all_run_results: List[Dict], run_metrics: List[D
             ['git', 'rev-parse', 'HEAD'], 
             stderr=subprocess.DEVNULL
         ).decode().strip()
-    except Exception:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         git_hash = 'unknown'
     
     aggregated['traceability'] = {
@@ -684,7 +685,7 @@ def main():
     parser.add_argument('--list', action='store_true',
                        help='List all available experiments')
     parser.add_argument('--all', action='store_true',
-                       help='Run ALL experiments (166 total)')
+                       help='Run ALL experiments defined in experiments.yaml')
     parser.add_argument('--experiments', nargs='+', 
                        help='Specific experiments to run')
     parser.add_argument('--grid', action='store_true',
@@ -795,8 +796,10 @@ def main():
                 parallel_workers=args.parallel_runs
             )
             all_results.append(result)
-        except Exception as e:
-            print(f"Experiment {exp_name} failed with error: {e}")
+        except (ValueError, FileNotFoundError, KeyError) as e:
+            import traceback
+            print(f"\nERROR: Experiment {exp_name} failed: {e}")
+            traceback.print_exc()
             all_results.append({
                 'experiment': exp_name,
                 'status': 'failed',
