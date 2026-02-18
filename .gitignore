@@ -1,10 +1,55 @@
 rebuild2.py
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Pixi environment
 .pixi/
+
+# Data files (large)
 data/
+
+# Experiment results (large, generated)
 experiments/
+multi_disease_data/
+disease_samples/
+
+# Logs
+logs/
+*.log
+
+# Analysis outputs (regenerable)
 analysis/
 figures/
-docs/
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# Documentation (local only, not in repo)
+docs/
+*.tar.gz
+*.zip
+
+# Temporary files
+*.tmp
+*.temp
+.~*
+~$*
+create_commits.sh
