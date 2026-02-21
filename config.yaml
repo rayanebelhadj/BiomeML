@@ -1,48 +1,65 @@
+# BiomeML - Multi-Disease Microbiome Analysis Configuration
+# This file centralizes all configurable parameters for the entire pipeline
+# Default disease: IBD (can be changed via experiments.yaml or environment)
+
+# =============================================================================
+# DATA EXTRACTION SETTINGS (Notebook 01)
+# =============================================================================
 data_extraction:
+  # Input file paths (relative to project root)
   input_files:
     biom_path: "data/AGP.data.biom"
     metadata_path: "data/AGP-metadata.tsv"
     phylogeny_path: "data/2024.09.phylogeny.asv.nwk"
     aln_stockholm_path: "data/T2D_seqs_CMaligned_with_Rfam.sto"
     phylo_network_path: "data/neighbornet_txt.gml"
-    sequences_path: "ASV_sequences.fasta"
-
+    sequences_path: "ASV_sequences.fasta"  # Optional
+  
+  # Clinical features extraction
   clinical_features:
-    enable: false
+    enable: false  # Set to true to include clinical features in model
     features:
-      use_age: true
-      use_sex: true
-      use_bmi: true
-      use_antibiotics: true
-      use_age_category: false
-
+      use_age: true              # Continuous age (host_age_normalized_years)
+      use_sex: true              # Binary sex (male/female)
+      use_bmi: true              # BMI category (underweight/normal/overweight/obese)
+      use_antibiotics: true      # Recent antibiotic use (yes/no)
+      use_age_category: false    # Age groups (20s, 30s, etc.) - one-hot encoded
+  
+  # Disease-specific metadata filtering (default: IBD)
   disease_criteria:
-    disease: "IBD"
-    ibd_positive_values:
+    disease: "IBD"  # Options: IBD, DIABETES, CANCER
+    ibd_positive_values: 
       - "Diagnosed by a medical professional (doctor, physician assistant)"
     ibd_negative_values:
       - "I do not have this condition"
     valid_ibd_types:
       - "Crohn's disease"
       - "Ulcerative colitis"
-
+  
+  # Sample matching parameters
   matching:
     age_categories: ["20s", "30s", "40s", "50s", "60s", "70+"]
     bmi_categories: ["Underweight", "Normal", "Overweight", "Obese"]
     random_seed: 42
+  
+  # Label manipulation (for control experiments)
+  shuffle_labels: false          # Shuffle labels to verify model learns signal
 
+  # Feature filtering (controls which microbes to keep)
   feature_filtering:
     enable: true
-    min_prevalence: 0.01
-    min_total_abundance: 0.001
-    max_features: 10000
-
+    min_prevalence: 0.01       # 1% - minimum fraction of samples feature must appear in
+    min_total_abundance: 0.001 # 0.1% - minimum total abundance across samples
+    max_features: 10000        # Safety cap: keep at most 10K ASVs (by prevalence)
+  
+  # Distance matrix selection
   distance_matrices:
-    use_tree_distance: true
-    use_sequence_distance: false
-    use_graph_distance: false
-    primary_matrix: "TreeDistMatrix"
-
+    use_tree_distance: true      # TreeDistMatrix (phylogenetic tree tip-to-tip)
+    use_sequence_distance: false # SeqDistMatrix (Jukes-Cantor)
+    use_graph_distance: false    # GraphDistMatrix (phylogenetic network)
+    primary_matrix: "TreeDistMatrix"  # Which matrix to use for graphs
+  
+  # Output directories
   output:
     base_dir: "notebooks/IBD_analysis_output"
     metadata_dir: "metadata"
@@ -50,128 +67,224 @@ data_extraction:
     phylogeny_dir: "phylogeny"
     sequences_dir: "sequences"
 
+# =============================================================================
+# GRAPH CONSTRUCTION SETTINGS (Notebook 02)
+# =============================================================================
 graph_construction:
+  # Primary graph type: knn, tree, mst, threshold, hierarchical
+  graph_type: "knn"
+  
+  # Graph quality thresholds
   quality:
-    min_nodes: 8
-    min_edges: 5
-    max_nodes_per_graph: 3000
-    remove_isolates: true
-    connectivity_check: false
-
+    min_nodes: 8              # Minimum nodes per graph (reject too small graphs)
+    min_edges: 5              # Minimum edges per graph (ensure connectivity)
+    max_nodes_per_graph: 3000 # Maximum graph size (memory limit)
+    remove_isolates: true     # Remove disconnected nodes
+    connectivity_check: false # Check graph connectivity (slow for large graphs)
+  
+  # k-NN graph construction parameters
   knn:
-    k: 10
-    symmetric: true
-    max_distance_factor: 3.5
-
+    k: 10                        # Number of nearest neighbors (higher = denser graphs)
+    symmetric: true              # Make edges bidirectional (mutual k-NN)
+    max_distance_factor: 3.5     # Maximum distance multiplier for edge inclusion
+  
+  # Threshold graph construction
+  threshold:
+    percentile: 25               # Distance percentile below which edges are created
+  
+  # Tree-based graph construction
+  tree:
+    ancestor_levels: 3           # Number of ancestor levels for tree graphs
+  
+  # Edge weight processing
   weights:
-    normalize: true
-    weight_transform: "inverse"
-
+    normalize: true              # Normalize edge weights to [0, 1]
+    weight_transform: "inverse"  # How to convert distances to weights (inverse, exp, linear)
+  
+  # Edge construction controls
+  edge_construction:
+    randomize_edges: false       # Randomize edges (control experiment)
+    complete_graph: false        # Build complete graph instead of sparse
+    preserve_degree: true        # Preserve degree distribution when randomizing
+  
+  # Processing options
   processing:
-    parallel: false
-    batch_size: 50
-    save_intermediate: true
-
+    parallel: false              # Enable parallel processing (may cause issues)
+    batch_size: 50               # Checkpoint save frequency
+    save_intermediate: true      # Save intermediate results
+  
+  # Output settings
   output:
-    save_networkx: true
-    save_visualizations: true
-    max_nodes_to_plot: 100
-
+    save_networkx: true          # Save NetworkX graphs
+    save_visualizations: true    # Generate graph visualizations
+    max_nodes_to_plot: 100       # Maximum nodes in visualization
+  
+  # ==========================================================================
+  # ADVANCED FEATURE ENGINEERING OPTIONS (NEW)
+  # ==========================================================================
+  
+  # Node feature engineering
   node_features:
-    use_abundance: true
-    use_log_abundance: false
-    use_zscore_abundance: false
-    use_prevalence: false
-    use_variance: false
-    use_phylo_depth: false
-    feature_combination: "concat"
-
+    # Base features (always included)
+    use_abundance: true           # Raw abundance values
+    
+    # Additional computed features
+    use_log_abundance: false      # Log-transformed abundance (log1p)
+    use_zscore_abundance: false   # Z-score normalized abundance
+    use_prevalence: false         # Fraction of samples with this ASV
+    use_variance: false           # Variance of abundance across samples
+    use_phylo_depth: false        # Depth in phylogenetic tree (if available)
+    
+    # Feature combination
+    feature_combination: "concat"  # How to combine features: concat, mean, weighted
+    
+  # Edge feature engineering  
   edge_features:
-    use_distance: true
-    use_log_distance: false
-    use_inv_distance: false
-    combine_distances: false
-    distance_combination: "mean"
+    use_distance: true            # Primary distance (from distance matrix)
+    use_log_distance: false       # Log-transformed distance
+    use_inv_distance: false       # Inverse distance (1/d)
+    combine_distances: false      # Combine multiple distance matrices
+    distance_combination: "mean"  # How to combine: mean, min, max, concat
+    
+  # Feature selection/filtering
+  feature_selection:
+    enable: false                 # Enable feature selection
+    method: "variance"            # Method: variance, prevalence, importance
+    top_k: null                   # Keep top-k features (null = keep all)
+    min_variance: 0.0             # Minimum variance threshold
+    min_prevalence: 0.01          # Minimum prevalence (fraction of samples)
+    
+  # Data augmentation (training only)
+  augmentation:
+    enable: false                 # Enable graph augmentation
+    node_dropout: 0.0             # Fraction of nodes to drop (0-0.3)
+    edge_dropout: 0.0             # Fraction of edges to drop (0-0.3)
+    feature_noise: 0.0            # Gaussian noise std for features (0-0.1)
+    
+  # Multi-scale graph construction
+  multi_scale:
+    enable: false                 # Build graphs at multiple k values
+    k_values: [5, 10, 15]         # Multiple k values to use
+    aggregation: "attention"      # How to combine: attention, mean, concat
 
+# =============================================================================
+# MODEL TRAINING SETTINGS (Notebook 03)
+# =============================================================================
 model_training:
+  # Dataset parameters
   dataset:
-    test_size: 0.15
-    val_size: 0.15
-    random_seed: 42
-    stratify: true
-
+    test_size: 0.15              # Fraction for test set
+    val_size: 0.15               # Fraction for validation set
+    random_seed: 42              # Random seed for reproducibility
+    stratify: true               # Stratify splits by class
+  
+  # Model architecture
   architecture:
-    model_type: "GINEConv"
-    hidden_dim: 160
-    num_layers: 2
-    dropout: 0.3
-    pooling: "mean"
-    activation: "relu"
-
+    model_type: "GINEConv"       # GNN layer type: GCN, GINEConv, GAT, GraphSAGE, EdgeCentricRGCN
+    hidden_dim: 160              # Hidden layer dimension (32, 64, 128, 160, 256)
+    num_layers: 2                # Number of GNN layers (1-4)
+    dropout: 0.3                 # Dropout rate (0.0-0.5)
+    pooling: "mean"              # Graph pooling method (mean, max, sum)
+    activation: "relu"           # Activation function (relu, elu, leaky_relu)
+    num_classes: 2               # Number of output classes (2 = binary)
+    use_clinical_features: false # Include clinical metadata in model
+    gnn_backbone: "GINEConv"     # GNN backbone for ensemble model
+    meta_hidden_dim: 32          # Hidden dim for metadata branch
+    meta_num_layers: 3           # Layers for metadata branch
+  
+  # Training hyperparameters
   training:
-    batch_size: 16
-    num_epochs: 200
-    learning_rate: 0.0001
-    weight_decay: 0.000005
-    patience: 30
-    min_delta: 0.001
-
+    batch_size: 16               # Samples per batch (8, 16, 32, 64)
+    num_epochs: 200              # Maximum training epochs
+    learning_rate: 0.0001        # Learning rate (1e-3, 5e-4, 1e-4, 5e-5)
+    weight_decay: 0.000005       # L2 regularization (5e-6, 1e-5, 5e-5)
+    patience: 30                 # Early stopping patience (epochs without improvement)
+    min_delta: 0.001             # Minimum improvement for early stopping
+    random_seed: 42              # Training random seed
+    shuffle_labels: false        # Shuffle labels for control experiment
+    n_estimators: 100            # Number of estimators for sklearn models (RF, XGBoost)
+    max_depth: 6                 # Max tree depth for sklearn models
+    xgb_learning_rate: 0.1       # Learning rate for XGBoost
+    
+    # Loss function
     loss:
-      type: "cross_entropy"
-      class_weights: null
-      focal_gamma: 2.0
-
+      type: "cross_entropy"        # Loss function (cross_entropy, focal_loss, weighted_ce)
+      class_weights: null          # Class weights for imbalanced data (null = auto-calculate)
+      focal_gamma: 2.0             # Gamma for focal loss (if using focal_loss)
+  
+  # Optimizer
   optimizer:
-    type: "adam"
-    momentum: 0.9
-    betas: [0.9, 0.999]
-
+    type: "adam"                 # Optimizer (adam, adamw, sgd)
+    momentum: 0.9                # Momentum for SGD
+    betas: [0.9, 0.999]          # Betas for Adam/AdamW
+  
+  # Device settings
   device:
-    use_cuda: true
-    device_id: 0
-
+    use_cuda: true               # Use GPU if available
+    device_id: 0                 # GPU device ID (if multiple GPUs)
+  
+  # Evaluation metrics
   metrics:
-    primary_metric: "val_loss"
-    track_metrics:
+    primary_metric: "val_loss"   # Metric for model selection (val_loss, val_acc, val_auc)
+    track_metrics:               # Metrics to track during training
       - "accuracy"
       - "auc_roc"
       - "precision"
       - "recall"
       - "f1_score"
-
+  
+  # Evaluation robustness settings - MAXIMUM PUBLICATION QUALITY
   evaluation:
-    enable_cross_validation: true
-    n_folds: 5
-    num_runs_per_experiment: 10
-    report_confidence_intervals: true
-    significance_level: 0.05
-    multiple_testing_correction: "bonferroni"
-    enable_interpretation: true
-    top_features_to_explain: 20
-    generate_embeddings_viz: true
-
+    # Cross-validation settings
+    enable_cross_validation: true    # Enable k-fold cross-validation
+    n_folds: 5                       # Number of CV folds (5 or 10 recommended)
+    
+    # Multiple runs settings  
+    num_runs_per_experiment: 50      # 50 runs for robust confidence intervals
+    report_confidence_intervals: true # Report 95% CI for metrics
+    
+    # Statistical testing
+    significance_level: 0.05         # Alpha level for significance tests
+    multiple_testing_correction: "bonferroni"  # Correction method (bonferroni, fdr, none)
+    
+    # Interpretation settings
+    enable_interpretation: true      # Enable model interpretation (attention/gradients)
+    top_features_to_explain: 20      # Number of top features to report
+    generate_embeddings_viz: true    # Generate t-SNE/UMAP visualizations
+  
+  # Output settings
   output:
-    save_model: true
-    save_history: true
-    save_predictions: true
-    save_plots: true
+    save_model: true             # Save best model
+    save_history: true           # Save training history
+    save_predictions: true       # Save test predictions
+    save_plots: true             # Save training plots
     results_dir: "results"
     models_dir: "models"
 
+# =============================================================================
+# VISUALIZATION SETTINGS
+# =============================================================================
 visualization:
-  style: "seaborn"
-  figsize: [12, 8]
-  dpi: 150
-  save_format: "png"
-  show_plots: false
+  style: "seaborn"               # Plot style (seaborn, ggplot, default)
+  figsize: [12, 8]               # Default figure size
+  dpi: 150                       # Plot resolution
+  save_format: "png"             # Image format (png, pdf, svg)
+  show_plots: false              # Display plots in notebook (false for server)
 
+# =============================================================================
+# LOGGING AND DEBUGGING
+# =============================================================================
 logging:
-  level: "INFO"
-  save_logs: true
+  level: "INFO"                  # Logging level (DEBUG, INFO, WARNING, ERROR)
+  save_logs: true                # Save logs to file
   log_dir: "logs"
-  verbose: true
+  verbose: true                  # Print detailed progress
 
+# =============================================================================
+# REPRODUCIBILITY
+# =============================================================================
 reproducibility:
-  random_seed: 42
-  deterministic: true
-  benchmark: false
+  random_seed: 42                # Global random seed
+  deterministic: true            # Use deterministic algorithms (may be slower)
+  benchmark: false               # Enable cudnn benchmarking (faster but non-deterministic)
+
