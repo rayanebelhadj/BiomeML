@@ -348,6 +348,29 @@ class TestNotebook03:
 
 
 # ---------------------------------------------------------------------------
+# 4b. Notebook 00 — dataset overview
+# ---------------------------------------------------------------------------
+
+class TestNotebook00:
+    @pytest.fixture(autouse=True)
+    def load(self):
+        self.path = ROOT / 'notebooks' / '00_dataset_overview.ipynb'
+        if not self.path.exists():
+            pytest.skip("00_dataset_overview.ipynb not found")
+        self.nb = _load_notebook(self.path)
+        self.src = _notebook_source(self.nb)
+
+    def test_imports_datasets_module(self):
+        assert 'load_dataset' in self.src or 'src.datasets' in self.src
+
+    def test_loads_config(self):
+        assert 'load_and_validate_config' in self.src
+
+    def test_lists_conditions(self):
+        assert 'list_available_conditions' in self.src or 'get_disease_labels' in self.src
+
+
+# ---------------------------------------------------------------------------
 # 5. Notebook 01 — data extraction
 # ---------------------------------------------------------------------------
 
