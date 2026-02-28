@@ -39,9 +39,14 @@ tqdm = "*"
 # Utilities
 pyyaml = "*"
 faiss-gpu = ">=1.11.0,<2"
+plotly = "*"
+
+[pypi-dependencies]
+streamlit = ">=1.39"
 
 [tasks]
 # Main commands
+app = { cmd = "streamlit run ui/app.py --server.headless true", description = "Launch web dashboard" }
 menu = { cmd = "python scripts/run_interactive.py", description = "Interactive experiment menu" }
 run = { cmd = "python scripts/run_experiments.py", description = "Run experiments (use --help for options)" }
 analyze = { cmd = "python scripts/analyze_results.py", description = "Analyze experiment results" }
