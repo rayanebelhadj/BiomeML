@@ -1,14 +1,36 @@
 # BiomeML
 
-Classification de maladies a partir du microbiome intestinal utilisant des reseaux de neurones sur graphes, avec support multi-dataset.
+*[English version](README.en.md)*
 
-## Fonctionnalites
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![PyTorch 2.4](https://img.shields.io/badge/PyTorch-2.4-ee4c2c)](https://pytorch.org/)
+[![PyG](https://img.shields.io/badge/PyTorch_Geometric-2.6-3C2179)](https://pyg.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![pixi](https://img.shields.io/badge/pixi-managed-brightgreen)](https://pixi.sh/)
 
-- **Datasets multiples** : AGP, curatedMetagenomicData (CMD), HMP, Custom
-- **Loaders modulaires** : interface `BaseDataset` commune
-- **Config-driven datasets** : ajout de nouveaux datasets via YAML uniquement
-- **Comparaison cross-dataset** : memes experiences sur differentes donnees
-- **curatedMetagenomicData** : donnees de meilleure qualite pour CRC, IBD, T2D, Cirrhosis, Obesity
+Classification de maladies a partir du microbiome intestinal en utilisant des reseaux de neurones sur graphes (GNN), avec support multi-dataset.
+
+## Pourquoi ce projet
+
+Le microbiome intestinal humain contient des milliers de taxons microbiens relies par des relations phylogenetiques. Les approches classiques de machine learning (MLP, Random Forest) traitent ces taxons comme des variables independantes et ignorent la structure evolutive qui les relie. BiomeML encode les relations entre microbes sous forme de graphes ou chaque noeud represente un taxon et chaque arete represente une proximite phylogenetique, puis utilise des GNN pour exploiter cette structure lors de la classification malade/sain.
+
+## Architecture
+
+### Pipeline global
+
+Le projet s'execute en 5 etapes orchestrees par des notebooks Jupyter. Chaque etape est pilotee par un fichier de configuration YAML centralise.
+
+![Pipeline global](assets/pipeline.png)
+
+### Construction de graphes
+
+La transformation des donnees brutes en graphes est l'etape qui differencie BiomeML des approches classiques.
+
+![Construction de graphes](assets/graph_construction.png)
+
+### Modules `src/`
+
+![Modules src/](assets/modules.png)
 
 ## Datasets supportes
 
@@ -17,61 +39,38 @@ Classification de maladies a partir du microbiome intestinal utilisant des resea
 | **AGP** | American Gut Project | IBD, Diabetes, Cancer, Depression, + 6 autres |
 | **CMD** | curatedMetagenomicData | CRC, IBD, T2D, Cirrhosis, Obesity |
 | **HMP** | Human Microbiome Project / IBDMDB | IBD, Crohn's, UC |
-| **Custom** | Donnees utilisateur | Definies par l'utilisateur |
+| **Custom** | Donnees utilisateur | Definies via YAML |
 
-## Installation
+## Demarrage rapide
 
 ```bash
 git clone https://github.com/rayanebelhadj/BiomeML.git
 cd BiomeML
 pixi install
-pixi run check
+pixi run check          # verifier l'environnement
+pixi run menu           # menu interactif
+pixi run app            # tableau de bord Streamlit
 ```
 
-## Utilisation
-
-### Menu interactif
+### Lancer des experiences
 
 ```bash
-pixi run menu
+pixi run run --list                                         # lister les experiences
+pixi run run --experiments cmd_ibd_baseline --num-runs 50   # une experience
+pixi run run --all --num-runs 50                            # toutes les experiences
 ```
 
-Selectionnez le dataset, la maladie, puis le type d'experience.
+## Technologies
 
-### Ligne de commande
-
-```bash
-pixi run run --list
-pixi run run --experiments cmd_ibd_baseline --num-runs 50
-pixi run run --all --num-runs 50
-```
-
-### Gestion des datasets
-
-```bash
-python scripts/download_datasets.py --list
-python scripts/download_datasets.py --dataset cmd --check
-```
-
-## Configuration
-
-### Selection du dataset
-
-Dans `config.yaml` :
-
-```yaml
-dataset:
-  name: "cmd"
-  config_file: "datasets_config/cmd.yaml"
-```
-
-### Configuration par dataset
-
-Chaque dataset a son fichier dans `datasets_config/` :
-- `agp.yaml` : chemins BIOM, metadata, phylogenie
-- `cmd.yaml` : etudes, niveaux taxonomiques
-- `hmp.yaml` : source HMP, body sites
-- `custom_template.yaml` : template pour donnees custom
+| Categorie | Outils |
+|-----------|--------|
+| Deep Learning | PyTorch, PyTorch Geometric |
+| Graphes | NetworkX, scikit-bio |
+| ML classique | scikit-learn, XGBoost |
+| Visualisation | Plotly, Matplotlib, Seaborn |
+| Interface | Streamlit |
+| Donnees | pandas, NumPy, BIOM-format |
+| Environnement | pixi |
 
 ## Structure du projet
 
@@ -79,69 +78,80 @@ Chaque dataset a son fichier dans `datasets_config/` :
 BiomeML/
 ├── src/
 │   ├── datasets/              # Loaders multi-dataset
-│   │   ├── base.py            # Interface abstraite
-│   │   ├── agp.py             # American Gut
-│   │   ├── curated_metagenomic.py  # curatedMetagenomicData
-│   │   ├── hmp.py             # HMP
-│   │   ├── config_driven.py   # Loader generique (YAML-driven)
-│   │   └── custom.py          # Donnees custom (legacy)
-│   ├── models.py              # Architectures GNN
-│   ├── cross_validation.py    # Entrainement et validation croisee
-│   ├── edge_weights.py        # Strategies de ponderation
-│   ├── graph_utils.py         # Construction de graphes
-│   ├── gpu_graph_conversion.py # Conversion NetworkX -> PyG
+│   │   ├── base.py            # Interface abstraite BaseDataset
+│   │   ├── agp.py             # American Gut Project
+│   │   ├── curated_metagenomic.py
+│   │   ├── hmp.py             # Human Microbiome Project
+│   │   └── config_driven.py   # Loader generique YAML-driven
+│   ├── models.py              # 10 architectures (GNN + baselines)
+│   ├── cross_validation.py    # Entrainement k-fold stratifie
+│   ├── graph_utils.py         # 5 methodes de construction de graphes
+│   ├── edge_weights.py        # 9 strategies de ponderation
+│   ├── gpu_graph_conversion.py # Conversion NetworkX vers PyG
 │   ├── config_validation.py   # Validation stricte de config
 │   ├── feature_loader.py      # Metadonnees cliniques
-│   └── model_interpretation.py # Interpretation des modeles
+│   └── model_interpretation.py # Gradients, embeddings, analyse
 │
-├── datasets_config/           # Configs par dataset
-│   ├── agp.yaml
-│   ├── cmd.yaml
-│   ├── hmp.yaml
-│   └── custom_template.yaml
-│
-├── notebooks/
-│   ├── 00_dataset_overview.ipynb  # Exploration des datasets
+├── notebooks/                 # Pipeline en 5 etapes
+│   ├── 00_dataset_overview.ipynb
 │   ├── 01_data_extraction.ipynb
 │   ├── 02_graph_construction.ipynb
 │   ├── 03_model_training.ipynb
 │   └── 04_model_interpretation.ipynb
 │
 ├── scripts/
-│   ├── run_interactive.py     # Menu interactif
-│   ├── run_experiments.py     # Orchestrateur
-│   ├── download_datasets.py   # Outil de telechargement
-│   ├── analyze_results.py
+│   ├── run_experiments.py     # Orchestrateur d'experiences
+│   ├── run_interactive.py     # Menu interactif CLI
+│   ├── analyze_results.py     # Analyse statistique
 │   └── create_visualizations.py
 │
+├── ui/                        # Tableau de bord Streamlit
+│   ├── app.py
+│   ├── pages/
+│   └── components/
+│
+├── datasets_config/           # Configuration par dataset (YAML)
 ├── tests/                     # Tests unitaires et d'integration
-├── config.yaml                # Configuration globale + selection dataset
-├── experiments.yaml           # Experiences AGP + CMD
-└── pixi.toml                  # Environnement
+├── config.yaml                # Configuration globale
+├── experiments.yaml           # Definitions des experiences
+└── pixi.toml                  # Environnement et taches
 ```
 
-## Architectures GNN
+## Architectures
 
-GCN, GINEConv, GAT, GraphSAGE, EdgeCentricRGCN, MLP, CNN, Ensemble, RandomForest, XGBoost.
+| Modele | Type | Description |
+|--------|------|-------------|
+| GCN | GNN | Graph Convolutional Network |
+| GAT | GNN | Graph Attention Network |
+| GINEConv | GNN | Graph Isomorphism Network avec attributs d'aretes |
+| GraphSAGE | GNN | Echantillonnage et aggregation de voisinage |
+| EdgeCentricRGCN | GNN | GCN relationnel centre sur les aretes |
+| MLP | Baseline | Perceptron multicouche (ignore la structure de graphe) |
+| CNN | Baseline | Reseau convolutif 1D sur les abondances |
+| Ensemble | Hybride | Combinaison de modeles |
+| RandomForest | ML classique | Via scikit-learn |
+| XGBoost | ML classique | Gradient boosting |
 
-## Strategies de ponderation
+## Configuration
 
-Distance : identity, inverse, exponential, binary.
-Abondance : product, geometric, log, min, max.
+Selection du dataset dans `config.yaml` :
 
-## Ajouter un dataset
+```yaml
+dataset:
+  name: "cmd"
+  config_file: "datasets_config/cmd.yaml"
+```
 
-1. Creer `datasets_config/mon_dataset.yaml` avec les chemins, colonnes et conditions
-2. Ajouter des experiences dans `experiments.yaml`
+Chaque dataset a son fichier dans `datasets_config/` avec les chemins, colonnes et conditions specifiques.
 
-Ou, pour un loader specialise :
-1. Creer `src/datasets/mon_dataset.py` heritant de `BaseDataset`
-2. Enregistrer dans `src/datasets/__init__.py`
-3. Creer `datasets_config/mon_dataset.yaml`
-4. Ajouter des experiences dans `experiments.yaml`
+Les experiences sont definies dans `experiments.yaml` avec des overrides de configuration qui sont fusionnees avec la config de base.
 
 ## Tests
 
 ```bash
 pytest tests/ -v
 ```
+
+## Licence
+
+[MIT](LICENSE)

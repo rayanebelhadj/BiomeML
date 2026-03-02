@@ -3,10 +3,12 @@ __pycache__/
 *.pyo
 *.egg-info/
 .pixi/
+pixi.lock
 .python-version
 .env
 .DS_Store
 .ipynb_checkpoints/
+.cursor/
 
 data/
 experiments/
