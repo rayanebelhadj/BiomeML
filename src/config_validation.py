@@ -88,7 +88,19 @@ def load_and_validate_config(notebook: str) -> dict:
     return config
 
 
+_DATASET_REQUIRED = {
+    'dataset': {
+        'name': [],
+        'config_file': [],
+    },
+}
+
+_NB00_REQUIRED = {
+    **_DATASET_REQUIRED,
+}
+
 _NB01_REQUIRED = {
+    **_DATASET_REQUIRED,
     'data_extraction': {
         'disease_criteria': ['disease'],
         'feature_filtering': ['enable', 'min_prevalence', 'min_total_abundance', 'max_features'],
@@ -99,6 +111,7 @@ _NB01_REQUIRED = {
 }
 
 _NB02_REQUIRED = {
+    **_DATASET_REQUIRED,
     'data_extraction': {
         'disease_criteria': ['disease'],
     },
@@ -113,6 +126,7 @@ _NB02_REQUIRED = {
 }
 
 _NB03_REQUIRED = {
+    **_DATASET_REQUIRED,
     'data_extraction': {
         'disease_criteria': ['disease'],
     },
@@ -125,6 +139,7 @@ _NB03_REQUIRED = {
 }
 
 _NB04_REQUIRED = {
+    **_DATASET_REQUIRED,
     'data_extraction': {
         'disease_criteria': ['disease'],
     },
@@ -134,6 +149,7 @@ _NB04_REQUIRED = {
 }
 
 _REQUIRED_MAP = {
+    'NB00': _NB00_REQUIRED,
     'NB01': _NB01_REQUIRED,
     'NB02': _NB02_REQUIRED,
     'NB03': _NB03_REQUIRED,

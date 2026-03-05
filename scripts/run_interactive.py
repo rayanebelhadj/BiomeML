@@ -22,10 +22,20 @@ PROJECT_ROOT = Path(__file__).parent.parent
 EXPERIMENTS_DIR = PROJECT_ROOT / "experiments"
 EXPERIMENTS_YAML = PROJECT_ROOT / "experiments.yaml"
 
-DISEASES = [
+DATASETS = {
+    "agp": "American Gut Project",
+    "cmd": "curatedMetagenomicData",
+    "hmp": "Human Microbiome Project",
+}
+
+AGP_DISEASES = [
     "ibd", "diabetes", "cancer", "autoimmune", "depression",
-    "mental_illness", "ptsd", "arthritis", "asthma", "stomach_bowel"
+    "mental_illness", "ptsd", "arthritis", "asthma", "stomach_bowel",
 ]
+CMD_DISEASES = ["IBD", "CRC", "T2D", "Cirrhosis", "Obesity"]
+HMP_DISEASES = ["IBD", "Crohns", "UC"]
+
+DISEASES = AGP_DISEASES  # default, overridden by dataset selection
 
 ARCHITECTURES = {
     "baseline": "GINEConv (baseline)",
@@ -104,6 +114,40 @@ def show_main_menu():
     return input("Select option [1-5]: ").strip()
 
 
+def select_dataset():
+    print("\n--- Select Dataset ---\n")
+    ds_list = list(DATASETS.keys())
+    for i, ds in enumerate(ds_list, 1):
+        print(f"  [{i}] {ds.upper()} - {DATASETS[ds]}")
+    print()
+    choice = input("Select dataset [1-3]: ").strip()
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(ds_list):
+            return ds_list[idx]
+    except ValueError:
+        pass
+    return "agp"
+
+
+def get_diseases_for_dataset(dataset_name):
+    if dataset_name == "cmd":
+        return CMD_DISEASES
+    elif dataset_name == "hmp":
+        return HMP_DISEASES
+    return AGP_DISEASES
+
+
+def get_experiments_for_dataset(dataset_name, experiments):
+    results = []
+    for name, config in experiments.items():
+        if isinstance(config, dict):
+            exp_ds = config.get("dataset", "agp")
+            if exp_ds == dataset_name:
+                results.append(name)
+    return sorted(results)
+
+
 def parse_selection(choice, max_val):
     indices = set()
     
@@ -163,8 +207,12 @@ def run_experiments_menu(experiments):
         clear_screen()
         show_header()
         print("\n--- Run Experiments ---\n")
-        
-        selected_diseases = select_from_list(DISEASES, "Select disease:", allow_all=True)
+
+        dataset = select_dataset()
+        diseases_for_ds = get_diseases_for_dataset(dataset)
+        print(f"\nDataset: {dataset.upper()}")
+
+        selected_diseases = select_from_list(diseases_for_ds, "Select disease:", allow_all=True)
         
         if selected_diseases is None:
             return

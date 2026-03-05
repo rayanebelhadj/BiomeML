@@ -1,5 +1,10 @@
+# ==============================================================================
+# AGP EXPERIMENTS (dataset: agp) -- same as v1
+# ==============================================================================
+
 baseline:
   name: baseline
+  dataset: agp
   disease: ibd
   description: GINEConv baseline with k=10, Pearson correlation graph
   graph_construction:
@@ -9,6 +14,7 @@ baseline:
       model_type: GINEConv
 k_5:
   name: k_5
+  dataset: agp
   disease: ibd
   description: k-NN with k=5
   graph_construction:
@@ -16,6 +22,7 @@ k_5:
       k: 5
 k_15:
   name: k_15
+  dataset: agp
   disease: ibd
   description: k-NN with k=15
   graph_construction:
@@ -23,6 +30,7 @@ k_15:
       k: 15
 k_20:
   name: k_20
+  dataset: agp
   disease: ibd
   description: k-NN with k=20
   graph_construction:
@@ -30,18 +38,22 @@ k_20:
       k: 20
 distance_tree:
   name: distance_tree
+  dataset: agp
   disease: ibd
   description: Using tree distance metric
 distance_sequence:
   name: distance_sequence
+  dataset: agp
   disease: ibd
   description: Using sequence distance metric
 distance_graph:
   name: distance_graph
+  dataset: agp
   disease: ibd
   description: Using graph distance metric
 edge_identity:
   name: edge_identity
+  dataset: agp
   disease: ibd
   description: Edge weight strategy identity
   graph_construction:
@@ -49,6 +61,7 @@ edge_identity:
       weight_transform: identity
 edge_exponential:
   name: edge_exponential
+  dataset: agp
   disease: ibd
   description: Edge weight strategy exponential
   graph_construction:
@@ -56,6 +69,7 @@ edge_exponential:
       weight_transform: exponential
 edge_binary:
   name: edge_binary
+  dataset: agp
   disease: ibd
   description: Edge weight strategy binary
   graph_construction:
@@ -63,6 +77,7 @@ edge_binary:
       weight_transform: binary
 gcn_arch:
   name: gcn_arch
+  dataset: agp
   disease: ibd
   description: GCN model
   model_training:
@@ -70,6 +85,7 @@ gcn_arch:
       model_type: GCN
 gat_arch:
   name: gat_arch
+  dataset: agp
   disease: ibd
   description: GAT model
   model_training:
@@ -77,6 +93,7 @@ gat_arch:
       model_type: GAT
 graphsage_arch:
   name: graphsage_arch
+  dataset: agp
   disease: ibd
   description: GraphSAGE model
   model_training:
@@ -84,6 +101,7 @@ graphsage_arch:
       model_type: GraphSAGE
 hidden_64:
   name: hidden_64
+  dataset: agp
   disease: ibd
   description: Smaller hidden dimension 64
   model_training:
@@ -91,6 +109,7 @@ hidden_64:
       hidden_dim: 64
 hidden_256:
   name: hidden_256
+  dataset: agp
   disease: ibd
   description: Larger hidden dimension 256
   model_training:
@@ -98,6 +117,7 @@ hidden_256:
       hidden_dim: 256
 layers_1:
   name: layers_1
+  dataset: agp
   disease: ibd
   description: Single layer
   model_training:
@@ -105,6 +125,7 @@ layers_1:
       num_layers: 1
 layers_3:
   name: layers_3
+  dataset: agp
   disease: ibd
   description: Three layers
   model_training:
@@ -112,6 +133,7 @@ layers_3:
       num_layers: 3
 dropout_01:
   name: dropout_01
+  dataset: agp
   disease: ibd
   description: Low dropout 0.1
   model_training:
@@ -119,6 +141,7 @@ dropout_01:
       dropout: 0.1
 dropout_05:
   name: dropout_05
+  dataset: agp
   disease: ibd
   description: High dropout 0.5
   model_training:
@@ -126,6 +149,7 @@ dropout_05:
       dropout: 0.5
 lr_001:
   name: lr_001
+  dataset: agp
   disease: ibd
   description: Learning rate 0.001
   model_training:
@@ -133,6 +157,7 @@ lr_001:
       learning_rate: 0.001
 lr_00001:
   name: lr_00001
+  dataset: agp
   disease: ibd
   description: Learning rate 0.00001
   model_training:
@@ -140,6 +165,7 @@ lr_00001:
       learning_rate: 0.00001
 batch_32:
   name: batch_32
+  dataset: agp
   disease: ibd
   description: Batch size 32
   model_training:
@@ -147,15 +173,17 @@ batch_32:
       batch_size: 32
 batch_8:
   name: batch_8
+  dataset: agp
   disease: ibd
   description: Batch size 8
   model_training:
     training:
       batch_size: 8
 
-# T2D experiments
+# AGP - T2D experiments
 baseline_t2d:
   name: baseline_t2d
+  dataset: agp
   disease: t2d
   description: GINEConv baseline for T2D
   model_training:
@@ -163,6 +191,7 @@ baseline_t2d:
       model_type: GINEConv
 gcn_t2d:
   name: gcn_t2d
+  dataset: agp
   disease: t2d
   description: GCN for T2D
   model_training:
@@ -170,6 +199,7 @@ gcn_t2d:
       model_type: GCN
 gat_t2d:
   name: gat_t2d
+  dataset: agp
   disease: t2d
   description: GAT for T2D
   model_training:
@@ -178,6 +208,7 @@ gat_t2d:
 
 edge_abundance_product:
   name: edge_abundance_product
+  dataset: agp
   disease: ibd
   description: Edge weight strategy abundance_product
   graph_construction:
@@ -185,6 +216,7 @@ edge_abundance_product:
       weight_transform: abundance_product
 edge_abundance_geometric:
   name: edge_abundance_geometric
+  dataset: agp
   disease: ibd
   description: Edge weight strategy abundance_geometric
   graph_construction:
@@ -192,6 +224,7 @@ edge_abundance_geometric:
       weight_transform: abundance_geometric
 edge_abundance_log:
   name: edge_abundance_log
+  dataset: agp
   disease: ibd
   description: Edge weight strategy abundance_log
   graph_construction:
@@ -200,8 +233,9 @@ edge_abundance_log:
 
 shuffle_labels_ibd:
   name: shuffle_labels_ibd
+  dataset: agp
   disease: ibd
-  description: Shuffled labels control for IBD - should give ~50pct accuracy
+  description: Shuffled labels control for IBD
   model_training:
     architecture:
       model_type: GINEConv
@@ -209,6 +243,7 @@ shuffle_labels_ibd:
       shuffle_labels: true
 shuffle_labels_t2d:
   name: shuffle_labels_t2d
+  dataset: agp
   disease: t2d
   description: Shuffled labels control for T2D
   model_training:
@@ -219,6 +254,7 @@ shuffle_labels_t2d:
 
 gnn_meta_ibd:
   name: gnn_meta_ibd
+  dataset: agp
   disease: ibd
   description: GNN with patient metadata (late fusion)
   model_training:
@@ -229,17 +265,118 @@ gnn_meta_ibd:
       meta_hidden_dim: 32
 no_graph_mlp:
   name: no_graph_mlp
+  dataset: agp
   disease: ibd
   description: MLP baseline - no graph structure
   model_training:
     architecture:
       model_type: MLP
 
-# New batch - cross-disease comparison
 baseline_ages:
   name: baseline_ages
+  dataset: agp
   disease: ages
   description: GINEConv baseline for AGES cohort
   model_training:
     architecture:
       model_type: GINEConv
+
+# ==============================================================================
+# CMD EXPERIMENTS (dataset: cmd) -- curatedMetagenomicData
+# ==============================================================================
+
+cmd_ibd_baseline:
+  name: cmd_ibd_baseline
+  dataset: cmd
+  disease: IBD
+  description: CMD IBD baseline with GINEConv
+  model_training:
+    architecture:
+      model_type: GINEConv
+cmd_ibd_gcn:
+  name: cmd_ibd_gcn
+  dataset: cmd
+  disease: IBD
+  description: CMD IBD with GCN
+  model_training:
+    architecture:
+      model_type: GCN
+cmd_ibd_gat:
+  name: cmd_ibd_gat
+  dataset: cmd
+  disease: IBD
+  description: CMD IBD with GAT
+  model_training:
+    architecture:
+      model_type: GAT
+cmd_ibd_graphsage:
+  name: cmd_ibd_graphsage
+  dataset: cmd
+  disease: IBD
+  description: CMD IBD with GraphSAGE
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+
+cmd_crc_baseline:
+  name: cmd_crc_baseline
+  dataset: cmd
+  disease: CRC
+  description: CMD CRC baseline with GINEConv
+  model_training:
+    architecture:
+      model_type: GINEConv
+cmd_crc_gcn:
+  name: cmd_crc_gcn
+  dataset: cmd
+  disease: CRC
+  description: CMD CRC with GCN
+  model_training:
+    architecture:
+      model_type: GCN
+
+cmd_t2d_baseline:
+  name: cmd_t2d_baseline
+  dataset: cmd
+  disease: T2D
+  description: CMD T2D baseline with GINEConv
+  model_training:
+    architecture:
+      model_type: GINEConv
+cmd_t2d_gcn:
+  name: cmd_t2d_gcn
+  dataset: cmd
+  disease: T2D
+  description: CMD T2D with GCN
+  model_training:
+    architecture:
+      model_type: GCN
+
+cmd_cirrhosis_baseline:
+  name: cmd_cirrhosis_baseline
+  dataset: cmd
+  disease: Cirrhosis
+  description: CMD Cirrhosis baseline with GINEConv
+  model_training:
+    architecture:
+      model_type: GINEConv
+
+cmd_shuffle_ibd:
+  name: cmd_shuffle_ibd
+  dataset: cmd
+  disease: IBD
+  description: CMD shuffled labels control
+  model_training:
+    architecture:
+      model_type: GINEConv
+    training:
+      shuffle_labels: true
+
+cmd_mlp_ibd:
+  name: cmd_mlp_ibd
+  dataset: cmd
+  disease: IBD
+  description: CMD MLP baseline - no graph
+  model_training:
+    architecture:
+      model_type: MLP

@@ -72,6 +72,9 @@ class TestValidateNotebookConfig:
         with pytest.raises(ConfigError, match="Missing.*required key"):
             validate_notebook_config({}, 'NB01')
 
+    def test_nb00_valid(self, full_config):
+        validate_notebook_config(full_config, 'NB00')
+
     def test_nb01_valid(self, full_config):
         validate_notebook_config(full_config, 'NB01')
 
@@ -83,6 +86,20 @@ class TestValidateNotebookConfig:
 
     def test_nb04_valid(self, full_config):
         validate_notebook_config(full_config, 'NB04')
+
+    def test_missing_dataset_section_raises(self, full_config):
+        import copy
+        cfg = copy.deepcopy(full_config)
+        del cfg['dataset']
+        with pytest.raises(ConfigError, match="dataset"):
+            validate_notebook_config(cfg, 'NB00')
+
+    def test_missing_dataset_name_raises(self, full_config):
+        import copy
+        cfg = copy.deepcopy(full_config)
+        del cfg['dataset']['name']
+        with pytest.raises(ConfigError, match="dataset.name"):
+            validate_notebook_config(cfg, 'NB01')
 
 
 class TestMissingKeyDetection:
@@ -186,6 +203,25 @@ class TestLoadAndValidateConfig:
             yaml.dump(full_config, f)
         result = load_and_validate_config('NB03')
         assert result['model_training']['architecture']['model_type'] == 'GINEConv'
+
+    def test_loads_nb00_from_env(self, tmp_path, monkeypatch, full_config):
+        config_file = tmp_path / "test_config.yaml"
+        with open(config_file, 'w') as f:
+            yaml.dump(full_config, f)
+        monkeypatch.setenv('EXPERIMENT_CONFIG_PATH', str(config_file))
+        result = load_and_validate_config('NB00')
+        assert result['dataset']['name'] == 'agp'
+
+    def test_nb00_missing_dataset_raises(self, tmp_path, monkeypatch, full_config):
+        import copy
+        cfg = copy.deepcopy(full_config)
+        del cfg['dataset']
+        config_file = tmp_path / "bad_config.yaml"
+        with open(config_file, 'w') as f:
+            yaml.dump(cfg, f)
+        monkeypatch.setenv('EXPERIMENT_CONFIG_PATH', str(config_file))
+        with pytest.raises(ConfigError, match="dataset"):
+            load_and_validate_config('NB00')
 
     def test_empty_yaml_raises(self, tmp_path, monkeypatch):
         config_file = tmp_path / "empty.yaml"

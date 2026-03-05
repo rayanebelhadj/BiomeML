@@ -54,6 +54,24 @@ def _extract_disease(config: Dict, experiment_override: Dict) -> str:
     )
 
 
+def _extract_dataset_name(config: Dict, experiment_override: Dict) -> str:
+    """Extract the dataset name from experiment override or merged config. Never falls back silently."""
+    name = experiment_override.get('dataset')
+    if name:
+        return name
+
+    try:
+        return config['dataset']['name']
+    except (KeyError, TypeError):
+        pass
+
+    raise ValueError(
+        "Cannot determine dataset: not found in experiment config ('dataset' key) "
+        "or in base config ('dataset.name'). "
+        "Every experiment must specify a dataset."
+    )
+
+
 def expand_grid_search(grid_config: Dict) -> List[Dict]:
     parameters = grid_config.get('parameters', {})
     fixed = grid_config.get('fixed', {})
@@ -123,11 +141,18 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     print(f"Saved config to: {config_path}")
     
     disease = _extract_disease(full_config, config)
-    
+    dataset_name = _extract_dataset_name(full_config, config)
+
     if "disease_criteria" not in full_config["data_extraction"]:
         full_config["data_extraction"]["disease_criteria"] = {}
     full_config["data_extraction"]["disease_criteria"]["disease"] = disease
-    
+
+    if "dataset" not in full_config:
+        full_config["dataset"] = {}
+    full_config["dataset"]["name"] = dataset_name
+    if "config_file" not in full_config["dataset"]:
+        full_config["dataset"]["config_file"] = f"datasets_config/{dataset_name}.yaml"
+
     full_config['data_extraction']['output']['base_dir'] = str(notebooks_dir / f"{disease}_analysis_output")
     full_config['output_dir'] = str(exp_output_dir)
     
@@ -140,13 +165,14 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
     
     skip_data_extraction = False
     data_extraction_output = notebooks_dir / f"{disease}_analysis_output"
-    
-    if (data_extraction_output / "biom_tables" / f"AGP_{disease}_cases.tsv").exists() and \
-       (data_extraction_output / "phylogeny" / f"MATRICES_{disease}.pickle").exists():
-        print(f"\nData already extracted - skipping step 1")
+
+    abundance_file = data_extraction_output / "biom_tables" / f"{dataset_name}_{disease}_abundance.tsv"
+    pipeline_cfg = data_extraction_output / "config" / "pipeline_config.json"
+    if abundance_file.exists() and pipeline_cfg.exists():
+        print(f"\nData already extracted ({dataset_name}/{disease}) - skipping step 1")
         skip_data_extraction = True
     else:
-        print(f"\nData not found - will run extraction (~48 minutes)")
+        print(f"\nData not found - will run extraction")
         skip_data_extraction = False
     
     notebooks = [

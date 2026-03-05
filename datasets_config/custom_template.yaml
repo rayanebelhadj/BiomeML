@@ -1,0 +1,71 @@
+# ============================================================================
+# Config-Driven Dataset Template
+# ============================================================================
+#
+# This is the recommended way to add a new dataset to BiomeML.
+# No Python code needed -- just copy this file, rename it, and fill in
+# your values.  Place the YAML in datasets_config/ and reference it in
+# config.yaml or experiments.yaml.
+#
+# To use: set dataset.config_file in config.yaml to point here, e.g.:
+#   dataset:
+#     name: "my_study"
+#     config_file: "datasets_config/my_study.yaml"
+#
+# ============================================================================
+
+dataset_name: "my_study"
+data_dir: "data"
+
+# If your dataset matches a known loader, uncomment the next line:
+# loader: "agp"  # or "cmd", "hmp"
+# Otherwise, omit `loader:` and the generic ConfigDrivenDataset is used.
+
+# ----------------------------------------------------------------------------
+# Files  (paths relative to data_dir/dataset_name/ )
+# ----------------------------------------------------------------------------
+abundance_file: "abundance.tsv"      # TSV, CSV, or BIOM format
+metadata_file:  "metadata.tsv"       # TSV or CSV
+# phylogeny_file: "phylogeny.nwk"    # optional — leave commented out if none
+
+# ----------------------------------------------------------------------------
+# Column mappings: your_raw_column_name -> standard pipeline name
+# ----------------------------------------------------------------------------
+# Only map columns that exist in YOUR metadata.
+# The pipeline uses standard names internally (age, sex, bmi, disease_status).
+# If a standard column doesn't exist, just omit it.
+columns:
+  sample_id: null                # null = first column is the index
+  # sample_id: "SampleID"       # or specify the column name
+  age: "host_age"
+  sex: "host_sex"
+  bmi: "host_bmi"
+  # disease_status: "diagnosis"  # only needed if using automated label logic
+  # study: "study_name"
+  # body_site: "body_site"
+
+# ----------------------------------------------------------------------------
+# Conditions: define case/control labels for each analysis
+# ----------------------------------------------------------------------------
+# Each condition name becomes a valid `disease:` value in experiments.yaml.
+# All value comparisons are case-insensitive.
+conditions:
+  IBD:
+    column: "diagnosis"            # the raw column in your metadata
+    case_values: ["cd", "uc", "ibd"]
+    control_values: ["healthy", "control"]
+  Diabetes:
+    column: "diabetes_status"
+    case_values: ["type2", "t2d"]
+    control_values: ["healthy", "control"]
+
+# ----------------------------------------------------------------------------
+# Optional: sample matching for balanced cohorts
+# ----------------------------------------------------------------------------
+# matching:
+#   enabled: true
+#   match_on: [age, bmi]
+#   max_controls_per_case: 1
+#   tolerance:
+#     age: 5
+#     bmi: 3

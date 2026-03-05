@@ -1,0 +1,41 @@
+# Human Microbiome Project Dataset Configuration
+# Uses specialized loader (loader: hmp) for BIOM + multi-source handling
+
+dataset_name: "hmp"
+data_dir: "data"
+loader: "hmp"
+
+hmp_source: "ibdmdb"
+biom_file: "ibdmdb_abundance.biom"
+metadata_file: "ibdmdb_metadata.tsv"
+phylogeny_file: "phylogeny.nwk"
+min_reads_per_sample: 1000
+body_site: "Gut"
+
+# Column mappings: raw metadata column -> standard name
+columns:
+  sample_id: null                  # first column / index
+  age: "age_at_diagnosis"
+  sex: "sex"
+  disease_status: "diagnosis"
+  subject_id: "participant_id"
+
+# Condition definitions (used by ConfigDrivenDataset if loader is removed)
+conditions:
+  IBD:
+    column: "diagnosis"
+    case_values: ["cd", "uc", "ibd", "crohn's disease", "ulcerative colitis"]
+    control_values: ["nonibd", "non-ibd", "healthy", "control", "hc"]
+  Crohns:
+    column: "diagnosis"
+    case_values: ["cd"]
+    control_values: ["nonibd", "non-ibd", "healthy", "control", "hc"]
+  UC:
+    column: "diagnosis"
+    case_values: ["uc"]
+    control_values: ["nonibd", "non-ibd", "healthy", "control", "hc"]
+
+matching:
+  enabled: true
+  match_on: [age_at_diagnosis]
+  max_controls_per_case: 1
