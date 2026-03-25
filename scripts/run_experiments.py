@@ -147,11 +147,11 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
         full_config["data_extraction"]["disease_criteria"] = {}
     full_config["data_extraction"]["disease_criteria"]["disease"] = disease
 
-    if "dataset" not in full_config:
-        full_config["dataset"] = {}
-    full_config["dataset"]["name"] = dataset_name
-    if "config_file" not in full_config["dataset"]:
-        full_config["dataset"]["config_file"] = f"datasets_config/{dataset_name}.yaml"
+    full_config["dataset"] = {
+        "name": dataset_name,
+        "config_file": full_config["dataset"].get("config_file", f"datasets_config/{dataset_name}.yaml")
+            if isinstance(full_config.get("dataset"), dict) else f"datasets_config/{dataset_name}.yaml",
+    }
 
     full_config['data_extraction']['output']['base_dir'] = str(notebooks_dir / f"{disease}_analysis_output")
     full_config['output_dir'] = str(exp_output_dir)
