@@ -315,6 +315,7 @@ def run_multiple_experiments(
     run_metrics = []
     
     disease = _extract_disease(full_config, config)
+    dataset_name = _extract_dataset_name(full_config, config)
     
     runs_to_execute = []
     
@@ -377,8 +378,8 @@ def run_multiple_experiments(
         
         data_extraction_output = notebooks_dir / f"{disease}_analysis_output"
         skip_data_extraction = (
-            (data_extraction_output / "biom_tables" / f"AGP_{disease}_cases.tsv").exists() and
-            (data_extraction_output / "phylogeny" / f"MATRICES_{disease}.pickle").exists()
+            (data_extraction_output / "biom_tables" / f"{dataset_name}_{disease}_abundance.tsv").exists() and
+            (data_extraction_output / "config" / "pipeline_config.json").exists()
         )
         
         graphs_path = data_extraction_output / "graphs" / f"nx_graphs_{disease}.pkl"
