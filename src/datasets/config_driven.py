@@ -145,11 +145,14 @@ class ConfigDrivenDataset(BaseDataset):
     # ------------------------------------------------------------------
 
     def get_disease_labels(self, disease_name: str) -> Tuple[np.ndarray, np.ndarray]:
-        if disease_name not in self.conditions:
+        # Resolve case-insensitively: callers uppercase the disease name.
+        canonical = {c.lower(): c for c in self.conditions}.get(disease_name.lower())
+        if canonical is None:
             raise ValueError(
                 f"Unknown condition: '{disease_name}'. "
                 f"Available: {self.list_available_conditions()}"
             )
+        disease_name = canonical
 
         cond = self.conditions[disease_name]
         column = cond['column']

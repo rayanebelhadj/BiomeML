@@ -83,11 +83,14 @@ class AmericanGutDataset(BaseDataset):
         return self._phylogeny
 
     def get_disease_labels(self, disease_name: str) -> Tuple[np.ndarray, np.ndarray]:
-        if disease_name not in self.DISEASES:
+        # Resolve case-insensitively: callers (run_experiments / notebooks) uppercase
+        # the disease name, so 'DIABETES' must still match the canonical 'Diabetes' key.
+        canonical = {d.lower(): d for d in self.DISEASES}.get(disease_name.lower())
+        if canonical is None:
             raise ValueError(f"Unknown disease: {disease_name}. Supported: {self.DISEASES}")
 
         metadata = self.load_metadata()
-        col_name = self.DISEASE_COLUMNS[disease_name]
+        col_name = self.DISEASE_COLUMNS[canonical]
 
         if col_name not in metadata.columns:
             col_matches = [c for c in metadata.columns if c.lower() == col_name.lower()]
@@ -136,7 +139,9 @@ class AmericanGutDataset(BaseDataset):
             raise ValueError("No requested samples found in BIOM table")
 
         filtered_biom = biom_table.filter(valid_samples, axis='sample', inplace=False)
-        df = filtered_biom.to_dataframe().T
+        # dense=True avoids biom's default sparse DataFrame, whose pandas int32 sparse
+        # index overflows ("No index can be less than zero") on the large AGP table.
+        df = filtered_biom.to_dataframe(dense=True).T
 
         if normalize:
             row_sums = df.sum(axis=1)

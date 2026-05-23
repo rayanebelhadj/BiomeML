@@ -130,10 +130,17 @@ class CustomDataset(BaseDataset):
     ) -> pd.DataFrame:
         abundance = self.load_abundance_data()
 
-        if set(sample_ids) & set(abundance.index):
-            df = abundance.loc[[s for s in sample_ids if s in abundance.index]]
-        elif set(sample_ids) & set(abundance.columns):
-            df = abundance[[s for s in sample_ids if s in abundance.columns]].T
+        # Compare as strings so an int/str dtype mismatch between metadata sample IDs
+        # and the abundance index does not yield a spurious "no samples found".
+        requested = {str(s) for s in sample_ids}
+        idx_str = abundance.index.astype(str)
+        col_str = abundance.columns.astype(str)
+        if requested & set(idx_str):
+            df = abundance.loc[idx_str.isin(requested).values]
+            df.index = df.index.astype(str)
+        elif requested & set(col_str):
+            df = abundance.loc[:, col_str.isin(requested).values].T
+            df.index = df.index.astype(str)
         else:
             raise ValueError("No requested samples found in abundance data")
 
