@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.loader import DataLoader
 from src.models import get_loss, WeightedBCELoss
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score, balanced_accuracy_score
 from scipy.stats import ttest_rel
 from pathlib import Path
@@ -122,9 +122,16 @@ def train_single_fold(
     model_class, model_params,
     training_params, dataset_class,
     device, num_classes=2,
-    dataset_kwargs=None
+    dataset_kwargs=None,
+    test_graphs=None, test_labels=None,
 ):
-    """Train model for a single fold."""
+    """Train model for a single fold.
+
+    Early stopping and model selection use (val_graphs, val_labels). If a held-out
+    test set is provided, the selected model is also evaluated on it and the test_*
+    metrics are returned; those are the unbiased per-fold metrics (never seen during
+    early stopping).
+    """
     if dataset_kwargs is None:
         dataset_kwargs = {}
     
@@ -163,7 +170,9 @@ def train_single_fold(
     if num_classes == 2:
         if loss_type == 'weighted_bce':
             loss_kwargs['pos_weight'] = WeightedBCELoss.compute_pos_weight(train_labels)
-        criterion = get_loss(loss_type, **loss_kwargs) if loss_type in ('bce', 'focal', 'weighted_bce') else get_loss('bce')
+        # Let get_loss raise on an unknown loss type; never silently fall back to BCE
+        # (a misconfigured weighted/focal experiment must fail loud, not run unweighted).
+        criterion = get_loss(loss_type, **loss_kwargs)
     else:
         criterion = nn.CrossEntropyLoss()
     
@@ -211,7 +220,7 @@ def train_single_fold(
     except ValueError:
         val_auc = None
     
-    return {
+    result = {
         'val_loss': val_loss,
         'val_accuracy': val_acc,
         'val_balanced_accuracy': val_balanced_acc,  # NEW
@@ -221,6 +230,34 @@ def train_single_fold(
         'labels': val_labels_out.tolist(),
         'probabilities': val_probs.tolist() if isinstance(val_probs, np.ndarray) else val_probs
     }
+
+    # Held-out test evaluation: never used for early stopping or model selection,
+    # so these are the unbiased per-fold metrics.
+    if test_graphs is not None and len(test_graphs) > 0:
+        test_dataset = create_dataset_from_graphs(
+            test_graphs, test_labels, dataset_class, **dataset_kwargs
+        )
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        test_loss, test_acc, test_preds, test_labels_out, test_probs, test_balanced_acc = evaluate(
+            model, test_loader, criterion, device, num_classes
+        )
+        try:
+            if num_classes == 2:
+                test_auc = roc_auc_score(test_labels_out, test_probs)
+            else:
+                test_auc = roc_auc_score(test_labels_out, test_probs, multi_class='ovr')
+        except ValueError:
+            test_auc = None
+        result.update({
+            'test_loss': test_loss,
+            'test_accuracy': test_acc,
+            'test_balanced_accuracy': test_balanced_acc,
+            'test_auc': test_auc,
+            'test_predictions': test_preds.tolist(),
+            'test_labels': test_labels_out.tolist(),
+        })
+
+    return result
 
 
 def run_kfold_experiment(
@@ -317,54 +354,67 @@ def run_kfold_experiment(
         if verbose:
             print(f"\n--- Fold {fold_idx + 1}/{n_folds} ---")
         
-        train_graphs = graphs[train_idx].tolist()
-        train_labels = labels[train_idx]
-        val_graphs = graphs[val_idx].tolist()
-        val_labels = labels[val_idx]
-        
+        # The held-out fold is the TEST set (never seen during early stopping).
+        test_graphs = graphs[val_idx].tolist()
+        test_labels = labels[val_idx]
+        # Carve an inner validation set out of the training portion for early stopping.
+        inner_stratify = labels[train_idx] if len(np.unique(labels[train_idx])) > 1 else None
+        inner_tr, inner_val = train_test_split(
+            np.arange(len(train_idx)), test_size=0.15,
+            random_state=random_seed + fold_idx, stratify=inner_stratify,
+        )
+        fold_train_idx = train_idx[inner_tr]
+        fold_innerval_idx = train_idx[inner_val]
+        train_graphs = graphs[fold_train_idx].tolist()
+        train_labels = labels[fold_train_idx]
+        val_graphs = graphs[fold_innerval_idx].tolist()
+        val_labels = labels[fold_innerval_idx]
+
         fold_runs = []
         for run_idx in range(num_runs_per_fold):
             run_seed = random_seed + fold_idx * 100 + run_idx
             torch.manual_seed(run_seed)
             np.random.seed(run_seed)
-            
+
             result = train_single_fold(
                 train_graphs, train_labels,
                 val_graphs, val_labels,
                 model_class, model_params,
                 training_params, dataset_class,
                 device, num_classes,
-                dataset_kwargs
+                dataset_kwargs,
+                test_graphs=test_graphs, test_labels=test_labels,
             )
             fold_runs.append(result)
             
             if verbose:
-                print(f"  Run {run_idx + 1}: Acc={result['val_accuracy']:.4f}, "
-                      f"AUC={result['val_auc']:.4f if result['val_auc'] else 'N/A'}")
-        
-        # Aggregate runs within fold
-        fold_accuracies = [r['val_accuracy'] for r in fold_runs]
-        fold_balanced_accs = [r['val_balanced_accuracy'] for r in fold_runs]
-        fold_aucs = [r['val_auc'] for r in fold_runs if r['val_auc'] is not None]
-        
+                auc_str = f"{result['test_auc']:.4f}" if result['test_auc'] is not None else "N/A"
+                print(f"  Run {run_idx + 1}: test Acc={result['test_accuracy']:.4f}, test AUC={auc_str}")
+
+        # Aggregate runs within fold using the held-out TEST metrics (unbiased)
+        fold_accuracies = [r['test_accuracy'] for r in fold_runs]
+        fold_balanced_accs = [r['test_balanced_accuracy'] for r in fold_runs]
+        fold_aucs = [r['test_auc'] for r in fold_runs if r['test_auc'] is not None]
+
         fold_result = {
             'fold_idx': fold_idx,
             'mean_accuracy': np.mean(fold_accuracies),
-            'std_accuracy': np.std(fold_accuracies) if len(fold_accuracies) > 1 else 0,
+            'std_accuracy': np.std(fold_accuracies, ddof=1) if len(fold_accuracies) > 1 else 0,
             'mean_balanced_accuracy': np.mean(fold_balanced_accs),
-            'std_balanced_accuracy': np.std(fold_balanced_accs) if len(fold_balanced_accs) > 1 else 0,
+            'std_balanced_accuracy': np.std(fold_balanced_accs, ddof=1) if len(fold_balanced_accs) > 1 else 0,
             'mean_auc': np.mean(fold_aucs) if fold_aucs else None,
-            'std_auc': np.std(fold_aucs) if len(fold_aucs) > 1 else 0,
+            'std_auc': np.std(fold_aucs, ddof=1) if len(fold_aucs) > 1 else 0,
             'runs': fold_runs,
-            'train_size': len(train_idx),
-            'val_size': len(val_idx)
+            'train_size': len(fold_train_idx),
+            'inner_val_size': len(fold_innerval_idx),
+            'test_size': len(val_idx),
         }
         fold_results.append(fold_result)
-        
-        # Collect predictions from best run
-        best_run = max(fold_runs, key=lambda x: x['val_accuracy'])
-        all_predictions.extend(best_run['predictions'])
-        all_true_labels.extend(best_run['labels'])
+
+        # Pool predictions from the first run (seed-fixed) — not the cherry-picked best.
+        rep_run = fold_runs[0]
+        all_predictions.extend(rep_run['test_predictions'])
+        all_true_labels.extend(rep_run['test_labels'])
         
         if verbose:
             print(f"  Fold {fold_idx + 1} Mean: Acc={fold_result['mean_accuracy']:.4f}")
