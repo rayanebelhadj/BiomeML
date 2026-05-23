@@ -24,6 +24,36 @@ def save_yaml(data: Dict, filepath: Path):
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
 
+def make_subprocess_env(config_path: Path) -> Dict[str, str]:
+    """Build the environment for a notebook subprocess.
+
+    Injects the per-experiment config path and redirects TMPDIR to a /home-backed
+    directory. On the server the root partition (which holds the default /tmp) is
+    small, shared with other users, and routinely full; skbio/torch/nbconvert temp
+    files must not land there or extraction crashes mid-run.
+    """
+    env = os.environ.copy()
+    env['EXPERIMENT_CONFIG_PATH'] = str(config_path)
+    tmp_dir = Path(__file__).resolve().parent.parent / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    env['TMPDIR'] = str(tmp_dir)
+    return env
+
+
+def normalize_dataset_key(full_config: Dict, dataset_name: str) -> None:
+    """Force full_config['dataset'] into the dict shape the notebooks require.
+
+    Experiment overrides specify ``dataset: <name>`` as a bare string; merge_configs
+    then overwrites the base config's dataset dict with that string, which fails
+    notebook validation (it expects ``dataset.name`` and ``dataset.config_file``).
+    Both single-run and multi-run paths must call this after merging.
+    """
+    existing = full_config.get("dataset")
+    config_file = (existing.get("config_file") if isinstance(existing, dict) else None) \
+        or f"datasets_config/{dataset_name}.yaml"
+    full_config["dataset"] = {"name": dataset_name, "config_file": config_file}
+
+
 def merge_configs(base_config: Dict, override_config: Dict) -> Dict:
     result = copy.deepcopy(base_config)
     
@@ -147,11 +177,7 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
         full_config["data_extraction"]["disease_criteria"] = {}
     full_config["data_extraction"]["disease_criteria"]["disease"] = disease
 
-    full_config["dataset"] = {
-        "name": dataset_name,
-        "config_file": full_config["dataset"].get("config_file", f"datasets_config/{dataset_name}.yaml")
-            if isinstance(full_config.get("dataset"), dict) else f"datasets_config/{dataset_name}.yaml",
-    }
+    normalize_dataset_key(full_config, dataset_name)
 
     full_config['data_extraction']['output']['base_dir'] = str(notebooks_dir / f"{disease}_analysis_output")
     full_config['output_dir'] = str(exp_output_dir)
@@ -223,9 +249,8 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
                 ]
             
             start = datetime.now()
-            env = os.environ.copy()
-            env['EXPERIMENT_CONFIG_PATH'] = str(exp_output_dir / "config.yaml")
-            
+            env = make_subprocess_env(exp_output_dir / "config.yaml")
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -245,14 +270,14 @@ def run_experiment(exp_name: str, config: Dict, base_config: Dict,
             
         except subprocess.CalledProcessError as e:
             print(f"   Failed: {e}")
-            print(f"   Error output: {e.stderr[:500]}")
-            
+            print(f"   Error output (tail):\n{(e.stderr or '')[-3000:]}")
+
             results['notebooks'][notebook] = {
                 'status': 'failed',
                 'error': str(e),
-                'stderr': e.stderr[:1000]
+                'stderr': e.stderr
             }
-            
+
             break
     
     results['end_time'] = datetime.now().isoformat()
@@ -366,6 +391,7 @@ def run_multiple_experiments(
         first_config['model_training']['training']['random_seed'] = first_seed
         
         first_full_config = merge_configs(base_config, first_config)
+        normalize_dataset_key(first_full_config, dataset_name)
         if "disease_criteria" not in first_full_config["data_extraction"]:
             first_full_config["data_extraction"]["disease_criteria"] = {}
         first_full_config["data_extraction"]["disease_criteria"]["disease"] = disease
@@ -424,13 +450,13 @@ def run_multiple_experiments(
                            "--ExecutePreprocessor.timeout=28800"]
                 
                 start = datetime.now()
-                env = os.environ.copy()
-                env['EXPERIMENT_CONFIG_PATH'] = str(config_path)
+                env = make_subprocess_env(config_path)
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env)
                 duration = (datetime.now() - start).total_seconds()
                 run_result['notebooks'][notebook] = {'status': 'success', 'duration_seconds': duration}
             except subprocess.CalledProcessError as e:
-                run_result['notebooks'][notebook] = {'status': 'failed', 'error': str(e)}
+                print(f"   Failed: {notebook}\n{(e.stderr or '')[-3000:]}")
+                run_result['notebooks'][notebook] = {'status': 'failed', 'error': str(e), 'stderr': e.stderr}
                 pipeline_ok = False
                 break
         
@@ -483,6 +509,7 @@ def run_multiple_experiments(
                 run_config['model_training']['training']['random_seed'] = run_seed
                 
                 run_full_config = merge_configs(base_config, run_config)
+                normalize_dataset_key(run_full_config, dataset_name)
                 if "disease_criteria" not in run_full_config["data_extraction"]:
                     run_full_config["data_extraction"]["disease_criteria"] = {}
                 run_full_config["data_extraction"]["disease_criteria"]["disease"] = disease
@@ -506,9 +533,8 @@ def run_multiple_experiments(
                            str(notebook_path), "--output", str(output_notebook),
                            "--ExecutePreprocessor.timeout=28800"]
                 
-                env = os.environ.copy()
-                env['EXPERIMENT_CONFIG_PATH'] = str(config_path)
-                
+                env = make_subprocess_env(config_path)
+
                 proc = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 processes.append((run_idx, run_seed, run_dir, proc, datetime.now()))
             
@@ -532,8 +558,12 @@ def run_multiple_experiments(
                         'status': 'success', 'duration_seconds': duration
                     }
                 else:
+                    err_text = stderr.decode() if stderr else ''
+                    print(f"   Failed: run {run_idx} (rc={proc.returncode})\n{err_text[-3000:]}")
                     run_result['notebooks']['03_model_training.ipynb'] = {
-                        'status': 'failed', 'error': stderr.decode()[:1000] if stderr else 'Unknown error'
+                        'status': 'failed',
+                        'error': f"nbconvert returncode {proc.returncode}",
+                        'stderr': err_text,
                     }
                 
                 _extract_run_metrics(run_result, run_dir, notebooks_dir, disease, run_metrics)

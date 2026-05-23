@@ -9,6 +9,8 @@ pixi.lock
 .DS_Store
 .ipynb_checkpoints/
 .cursor/
+.claude/
+CLAUDE.md
 
 data/
 experiments/
@@ -19,3 +21,4 @@ docs/
 *.tmp
 .tmp_*
 rebuild2.py
+tmp/
