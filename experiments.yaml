@@ -184,24 +184,24 @@ batch_8:
 baseline_t2d:
   name: baseline_t2d
   dataset: agp
-  disease: t2d
-  description: GINEConv baseline for T2D
+  disease: Diabetes
+  description: GINEConv baseline for AGP Diabetes
   model_training:
     architecture:
       model_type: GINEConv
 gcn_t2d:
   name: gcn_t2d
   dataset: agp
-  disease: t2d
-  description: GCN for T2D
+  disease: Diabetes
+  description: GCN for AGP Diabetes
   model_training:
     architecture:
       model_type: GCN
 gat_t2d:
   name: gat_t2d
   dataset: agp
-  disease: t2d
-  description: GAT for T2D
+  disease: Diabetes
+  description: GAT for AGP Diabetes
   model_training:
     architecture:
       model_type: GAT
@@ -236,33 +236,27 @@ shuffle_labels_ibd:
   dataset: agp
   disease: ibd
   description: Shuffled labels control for IBD
+  data_extraction:
+    shuffle_labels: true
   model_training:
     architecture:
       model_type: GINEConv
-    training:
-      shuffle_labels: true
 shuffle_labels_t2d:
   name: shuffle_labels_t2d
   dataset: agp
-  disease: t2d
-  description: Shuffled labels control for T2D
+  disease: Diabetes
+  description: Shuffled labels control for AGP Diabetes
+  data_extraction:
+    shuffle_labels: true
   model_training:
     architecture:
       model_type: GINEConv
-    training:
-      shuffle_labels: true
 
-gnn_meta_ibd:
-  name: gnn_meta_ibd
-  dataset: agp
-  disease: ibd
-  description: GNN with patient metadata (late fusion)
-  model_training:
-    architecture:
-      model_type: GNN_Meta
-    architecture_meta:
-      use_clinical_features: true
-      meta_hidden_dim: 32
+# gnn_meta_ibd (GNN + clinical-metadata late fusion) is DEFERRED: the clinical-feature
+# pipeline is not wired end-to-end yet (NB01 does not emit clinical columns and
+# feature_loader points at a file nobody writes). Re-enable once that is implemented;
+# until then it would silently train a plain GINEConv. See ONBOARDING / fix branch notes.
+
 no_graph_mlp:
   name: no_graph_mlp
   dataset: agp
@@ -272,14 +266,8 @@ no_graph_mlp:
     architecture:
       model_type: MLP
 
-baseline_ages:
-  name: baseline_ages
-  dataset: agp
-  disease: ages
-  description: GINEConv baseline for AGES cohort
-  model_training:
-    architecture:
-      model_type: GINEConv
+# baseline_ages removed: AGP has no 'ages' disease column and there is no defined
+# binary age-prediction target. Re-add with a real condition if needed.
 
 # ==============================================================================
 # CMD EXPERIMENTS (dataset: cmd) -- curatedMetagenomicData
@@ -366,11 +354,11 @@ cmd_shuffle_ibd:
   dataset: cmd
   disease: IBD
   description: CMD shuffled labels control
+  data_extraction:
+    shuffle_labels: true
   model_training:
     architecture:
       model_type: GINEConv
-    training:
-      shuffle_labels: true
 
 cmd_mlp_ibd:
   name: cmd_mlp_ibd

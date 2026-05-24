@@ -44,10 +44,13 @@ data_extraction:
   
   # Sample matching parameters
   matching:
+    enable: true                 # Subsample controls via frequency matching on strata
+    ratio: 1                     # controls per case (1 = balanced 1:1)
+    strata: ["age_cat", "bmi_cat"]   # metadata columns to match on (skipped if absent)
     age_categories: ["20s", "30s", "40s", "50s", "60s", "70+"]
     bmi_categories: ["Underweight", "Normal", "Overweight", "Obese"]
     random_seed: 42
-  
+
   # Label manipulation (for control experiments)
   shuffle_labels: false          # Shuffle labels to verify model learns signal
 
@@ -245,8 +248,9 @@ model_training:
     enable_cross_validation: true    # Enable k-fold cross-validation
     n_folds: 5                       # Number of CV folds (5 or 10 recommended)
     
-    # Multiple runs settings  
-    num_runs_per_experiment: 50      # 50 runs for robust confidence intervals
+    # Multiple runs settings
+    num_runs_per_experiment: 50      # outer repetitions via `run --num-runs N` (different seeds)
+    num_runs_per_fold: 1             # inner CV runs per fold (keep small; outer runs give the stats)
     report_confidence_intervals: true # Report 95% CI for metrics
     
     # Statistical testing
