@@ -13,6 +13,9 @@ import copy
 import itertools
 import argparse
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.pipeline_utils import graph_cache_key
+
 
 def load_yaml(filepath: Path) -> Dict:
     with open(filepath, 'r') as f:
@@ -408,7 +411,7 @@ def run_multiple_experiments(
             (data_extraction_output / "config" / "pipeline_config.json").exists()
         )
         
-        graphs_path = data_extraction_output / "graphs" / f"nx_graphs_{disease}.pkl"
+        graphs_path = data_extraction_output / "graphs" / f"nx_graphs_{disease}_{graph_cache_key(first_full_config)}.pkl"
         skip_graph_construction = graphs_path.exists()
         
         print(f"\n   Run {first_run_idx + 1}/{num_runs} (seed={first_seed})")
