@@ -24,17 +24,18 @@ def graph_cache_key(config: Dict[str, Any]) -> str:
     data_extraction = config.get('data_extraction', {})
     dataset = config.get('dataset', {})
     dataset_name = dataset.get('name', '') if isinstance(dataset, dict) else str(dataset)
-    # The cached per-sample graphs depend not only on graph_construction but also on
-    # the dataset, which distance matrix is primary, and which features/samples the
-    # extraction kept (feature_filtering, matching). Include all so two experiments
-    # that differ in any of these never reuse each other's graphs.
+    # Key on the dataset, the graph-construction settings, and which distance matrix
+    # is primary. CRITICAL: these must be STABLE across the runs of one experiment so
+    # the multi-run path (run 1 builds graphs; runs 2..N reuse them) finds the cache.
+    # Do NOT include matching/feature_filtering here: matching carries a per-run
+    # random_seed (injected by run_experiments) that would change the key every run
+    # and break graph reuse. Extraction-level settings are scoped by the per-disease
+    # extraction directory, not by this graph key.
     payload = json.dumps(
         {
             'dataset': dataset_name,
             'graph_construction': graph_construction,
             'primary_matrix': data_extraction.get('distance_matrices', {}).get('primary_matrix', ''),
-            'feature_filtering': data_extraction.get('feature_filtering', {}),
-            'matching': data_extraction.get('matching', {}),
         },
         sort_keys=True, default=str,
     )
