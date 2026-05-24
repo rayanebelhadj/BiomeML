@@ -21,13 +21,21 @@ def graph_cache_key(config: Dict[str, Any]) -> str:
     hyper-parameters produce the same key and correctly reuse cached graphs.
     """
     graph_construction = config.get('graph_construction', {})
-    primary_matrix = (
-        config.get('data_extraction', {})
-        .get('distance_matrices', {})
-        .get('primary_matrix', '')
-    )
+    data_extraction = config.get('data_extraction', {})
+    dataset = config.get('dataset', {})
+    dataset_name = dataset.get('name', '') if isinstance(dataset, dict) else str(dataset)
+    # The cached per-sample graphs depend not only on graph_construction but also on
+    # the dataset, which distance matrix is primary, and which features/samples the
+    # extraction kept (feature_filtering, matching). Include all so two experiments
+    # that differ in any of these never reuse each other's graphs.
     payload = json.dumps(
-        {'graph_construction': graph_construction, 'primary_matrix': primary_matrix},
+        {
+            'dataset': dataset_name,
+            'graph_construction': graph_construction,
+            'primary_matrix': data_extraction.get('distance_matrices', {}).get('primary_matrix', ''),
+            'feature_filtering': data_extraction.get('feature_filtering', {}),
+            'matching': data_extraction.get('matching', {}),
+        },
         sort_keys=True, default=str,
     )
     return hashlib.md5(payload.encode()).hexdigest()[:8]
