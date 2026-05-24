@@ -330,7 +330,13 @@ def run_kfold_experiment(
             f"graphs ({len(graphs)}) and labels ({len(labels)}) must have same length"
         )
     
-    graphs = np.array(graphs, dtype=object)
+    # Build a 1-D object array explicitly. np.array(graphs, dtype=object) flattens
+    # graph objects that are themselves array-like / equal-length (e.g. uniform-size
+    # graphs), corrupting them into nested lists; this guarantees one slot per graph.
+    _graphs = np.empty(len(graphs), dtype=object)
+    for _i, _g in enumerate(graphs):
+        _graphs[_i] = _g
+    graphs = _graphs
     labels = np.array(labels)
     
     unique_classes = np.unique(labels)
