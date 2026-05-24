@@ -115,11 +115,17 @@ class HumanMicrobiomeDataset(BaseDataset):
     def get_disease_labels(self, disease_name: str) -> Tuple[np.ndarray, np.ndarray]:
         metadata = self.load_metadata()
 
-        if disease_name == 'IBD':
+        # Resolve case-insensitively: callers uppercase the disease name, so
+        # 'CROHNS'/'BODY_SITE_CLASSIFICATION' must still match the canonical names.
+        canonical = {c.lower(): c for c in self.CONDITIONS}.get(disease_name.lower())
+        if canonical is None:
+            raise ValueError(f"Unknown condition: {disease_name}. Supported: {self.CONDITIONS}")
+
+        if canonical == 'IBD':
             return self._get_ibd_labels(metadata)
-        elif disease_name in ('Crohns', 'UC'):
-            return self._get_subtype_labels(metadata, disease_name)
-        elif disease_name == 'Body_Site_Classification':
+        elif canonical in ('Crohns', 'UC'):
+            return self._get_subtype_labels(metadata, canonical)
+        elif canonical == 'Body_Site_Classification':
             return self._get_body_site_labels(metadata)
         else:
             raise ValueError(f"Unknown condition: {disease_name}. Supported: {self.CONDITIONS}")

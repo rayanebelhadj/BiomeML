@@ -136,10 +136,10 @@ class CustomDataset(BaseDataset):
         idx_str = abundance.index.astype(str)
         col_str = abundance.columns.astype(str)
         if requested & set(idx_str):
-            df = abundance.loc[idx_str.isin(requested).values]
+            df = abundance.loc[idx_str.isin(requested)]
             df.index = df.index.astype(str)
         elif requested & set(col_str):
-            df = abundance.loc[:, col_str.isin(requested).values].T
+            df = abundance.loc[:, col_str.isin(requested)].T
             df.index = df.index.astype(str)
         else:
             raise ValueError("No requested samples found in abundance data")

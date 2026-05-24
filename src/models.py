@@ -26,18 +26,18 @@ _EDGE_ATTR_WARNED = False
 
 
 def _warn_missing_edge_attr():
-    """Emit a one-time warning when edge_attr is missing from a Data object."""
-    global _EDGE_ATTR_WARNED
-    if not _EDGE_ATTR_WARNED:
-        import warnings
-        warnings.warn(
-            "data.edge_attr is None — using ones (all edges weighted equally). "
-            "This is normal for GCN/GraphSAGE but may indicate a bug for "
-            "GINEConv/GAT which expect phylogenetic distance as edge features.",
-            RuntimeWarning,
-            stacklevel=4,
-        )
-        _EDGE_ATTR_WARNED = True
+    """Fail loud when edge_attr is missing.
+
+    Only GINEConv and GAT call this, and both are defined by their use of edge
+    features (phylogenetic distance). Silently substituting uniform weights would
+    train an "edge-aware" model on equal edges and produce plausible-but-wrong
+    results, so we raise instead. The subsequent ``edge_attr = ones`` line is
+    therefore unreachable defensive code.
+    """
+    raise ValueError(
+        "edge_attr is None but this model (GINEConv/GAT) requires edge features. "
+        "Check that graph construction wrote edge weights."
+    )
 
 
 def _validate_pooling(pooling: str) -> None:

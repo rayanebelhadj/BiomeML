@@ -170,12 +170,12 @@ class ConfigDrivenDataset(BaseDataset):
         valid_mask = metadata[column].notna()
         values = metadata.loc[valid_mask, column].astype(str).str.lower().str.strip()
 
+        # Exact matching only. Substring matching is dangerous here: a case token
+        # (e.g. 'ibd') is a substring of common control labels ('nonibd'/'non-ibd'),
+        # which would silently mislabel controls as cases. Control takes precedence.
         is_case = values.isin(case_vals)
         is_control = values.isin(control_vals)
-
-        for pattern in case_vals:
-            is_case = is_case | values.str.contains(pattern, na=False)
-        is_control = is_control & ~is_case
+        is_case = is_case & ~is_control
 
         clear = is_case | is_control
         sample_ids = metadata.loc[valid_mask].index[clear].values

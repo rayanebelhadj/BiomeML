@@ -188,15 +188,12 @@ class CuratedMetagenomicDataset(BaseDataset):
         valid_mask = metadata[disease_col].notna()
         disease_values = metadata.loc[valid_mask, disease_col].astype(str).str.lower()
 
-        is_case = pd.Series(False, index=disease_values.index)
-        is_control = pd.Series(False, index=disease_values.index)
-
-        for pattern in mapping['case']:
-            is_case = is_case | disease_values.str.contains(pattern, na=False)
-        for pattern in mapping['control']:
-            is_control = is_control | (disease_values == pattern)
-
-        is_control = is_control & ~is_case
+        # Exact matching only (substring matching let case tokens like 'ibd' match
+        # control labels such as 'nonibd'); control takes precedence. An unmatched
+        # value is dropped from both, and an all-unmatched column raises below.
+        is_case = disease_values.isin(mapping['case'])
+        is_control = disease_values.isin(mapping['control'])
+        is_case = is_case & ~is_control
         clear_status = is_case | is_control
         sample_ids = metadata.loc[valid_mask].index[clear_status].values
         labels = is_case[clear_status].astype(int).values
@@ -224,10 +221,10 @@ class CuratedMetagenomicDataset(BaseDataset):
         idx_str = abundance.index.astype(str)
         col_str = abundance.columns.astype(str)
         if requested & set(idx_str):
-            df = abundance.loc[idx_str.isin(requested).values]
+            df = abundance.loc[idx_str.isin(requested)]
             df.index = df.index.astype(str)
         elif requested & set(col_str):
-            df = abundance.loc[:, col_str.isin(requested).values].T
+            df = abundance.loc[:, col_str.isin(requested)].T
             df.index = df.index.astype(str)
         else:
             raise ValueError("No requested samples found in abundance data")
