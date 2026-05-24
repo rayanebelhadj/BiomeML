@@ -145,7 +145,8 @@ def train_single_fold(
     
     # Create loaders
     batch_size = training_params['batch_size']
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # drop_last avoids a final size-1 batch, which crashes BatchNorm1d in train mode.
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     
     # Create model
