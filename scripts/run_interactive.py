@@ -81,7 +81,7 @@ def get_experiment_status(exp_name):
         try:
             with open(agg_file) as f:
                 data = json.load(f)
-                acc = data.get("test_accuracy", {}).get("mean", 0)
+                acc = data.get("metrics", {}).get("test_accuracy", {}).get("mean", 0)
                 return completed, f"{completed} runs, {acc:.1%} acc"
         except:
             pass
@@ -413,8 +413,8 @@ def view_results_menu(experiments):
                     try:
                         with open(agg_file) as f:
                             data = json.load(f)
-                            acc = data.get("test_accuracy", {}).get("mean", 0)
-                            std = data.get("test_accuracy", {}).get("std", 0)
+                            acc = data.get("metrics", {}).get("test_accuracy", {}).get("mean", 0)
+                            std = data.get("metrics", {}).get("test_accuracy", {}).get("std", 0)
                             results.append({
                                 "name": name,
                                 "accuracy": acc,

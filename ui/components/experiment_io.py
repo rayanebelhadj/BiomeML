@@ -213,7 +213,26 @@ def load_all_results() -> pd.DataFrame:
         return pd.DataFrame()
 
     df = pd.DataFrame(results)
-    df["disease"] = df["experiment"].apply(parse_disease)
-    df["model_type"] = df["experiment"].apply(parse_model_type)
+
+    # Prefer the authoritative disease / model_type from experiments.yaml; the name
+    # heuristics mis-grouped experiments (e.g. *_t2d -> "ibd", CRC lowercased).
+    experiments = load_experiments()
+
+    def _disease(name):
+        cfg = experiments.get(name)
+        if isinstance(cfg, dict) and cfg.get("disease"):
+            return str(cfg["disease"])
+        return parse_disease(name)
+
+    def _model(name):
+        cfg = experiments.get(name)
+        if isinstance(cfg, dict):
+            mt = cfg.get("model_training", {}).get("architecture", {}).get("model_type")
+            if mt:
+                return mt
+        return parse_model_type(name)
+
+    df["disease"] = df["experiment"].apply(_disease)
+    df["model_type"] = df["experiment"].apply(_model)
     df["category"] = df["experiment"].apply(parse_category)
     return df
