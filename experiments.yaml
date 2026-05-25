@@ -36,21 +36,12 @@ k_20:
   graph_construction:
     knn:
       k: 20
-distance_tree:
-  name: distance_tree
-  dataset: agp
-  disease: ibd
-  description: Using tree distance metric
-distance_sequence:
-  name: distance_sequence
-  dataset: agp
-  disease: ibd
-  description: Using sequence distance metric
-distance_graph:
-  name: distance_graph
-  dataset: agp
-  disease: ibd
-  description: Using graph distance metric
+# distance_tree / distance_sequence / distance_graph REMOVED: they set no overrides,
+# so they were byte-identical to `baseline` (all use TreeDistMatrix). Real
+# sequence/graph-distance experiments require NB01 to compute SeqDistMatrix /
+# GraphDistMatrix and the experiment to set data_extraction.distance_matrices
+# accordingly; until that is implemented these were silent no-ops. distance_tree
+# is just baseline. Re-add with proper overrides once the matrices are produced.
 edge_identity:
   name: edge_identity
   dataset: agp

@@ -359,7 +359,13 @@ def run_multiple_experiments(
                     eval_data = json.load(f)
                 if 'test_accuracy' in eval_data or 'test_loss' in eval_data:
                     print(f"      Run {run_idx + 1} already complete, skipping")
-                    run_metrics.append(eval_data)
+                    # Remap to the same keys aggregation expects (test_auc_roc -> test_auc),
+                    # matching _extract_run_metrics; otherwise resumed runs silently drop AUC.
+                    run_metrics.append({
+                        'test_accuracy': eval_data.get('test_accuracy'),
+                        'test_auc': eval_data.get('test_auc_roc'),
+                        'test_balanced_accuracy': eval_data.get('test_balanced_accuracy'),
+                    })
                     all_run_results.append({
                         'run_idx': run_idx,
                         'seed': run_seed,
