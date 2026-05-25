@@ -252,3 +252,71 @@ class TestSaveCvResults:
             data = json.load(f)
         assert data['aggregated']['mean_accuracy'] == 0.85
         assert 'model_state' not in data['fold_results'][0]['runs'][0]
+
+
+# ---------------------------------------------------------------------------
+# Leakage / negative-control regression tests
+# ---------------------------------------------------------------------------
+
+@requires_torch
+class TestNoDataLeakage:
+    """If labels carry no signal, held-out test accuracy must be ~chance.
+    A high score here would mean train/test information is leaking (the silent
+    failure mode that has burned this project before)."""
+
+    def test_random_labels_give_chance_accuracy(self):
+        from src.models import GNN_GCN
+        graphs, _ = _make_toy_graphs(n=60, n_nodes=10, seed=1)
+        rng = np.random.default_rng(0)
+        labels = rng.integers(0, 2, size=len(graphs))
+        labels[0], labels[1] = 0, 1  # guarantee both classes
+        results = run_kfold_experiment(
+            graphs, labels,
+            model_class=GNN_GCN,
+            model_params={'input_dim': 1, 'hidden_dim': 8, 'num_layers': 2,
+                          'dropout': 0.0, 'pooling': 'mean', 'num_classes': 2},
+            training_params={'batch_size': 8, 'num_epochs': 10, 'learning_rate': 0.01,
+                             'weight_decay': 0.0, 'early_stopping_patience': 5,
+                             'loss': {'type': 'bce'}},
+            dataset_class=ToyDataset,
+            n_folds=3, num_runs_per_fold=1, random_seed=0, verbose=False,
+        )
+        mean_acc = results['aggregated']['mean_accuracy']
+        # Leakage would drive this toward ~1.0; random labels must stay near chance.
+        assert mean_acc < 0.80, (
+            f"Held-out test accuracy {mean_acc:.3f} on RANDOM labels is implausibly "
+            "high — indicates train/test leakage."
+        )
+
+    def test_separable_signal_is_learnable(self):
+        """Sanity counterpart: a planted, separable signal should beat chance,
+        confirming the pipeline can actually learn (so the leakage test above is
+        meaningful rather than trivially passing because nothing trains)."""
+        import torch
+        from torch_geometric.data import Data
+        from src.models import GNN_GCN
+        rng = np.random.default_rng(7)
+        graphs, labels = [], []
+        for i in range(60):
+            label = int(i < 30)
+            # class signal in node features: shift the mean by class
+            x = torch.randn(10, 1) + (2.0 if label else -2.0)
+            ei = torch.tensor([[j, (j + 1) % 10] for j in range(10)]
+                              + [[(j + 1) % 10, j] for j in range(10)], dtype=torch.long).t()
+            ea = torch.ones(ei.shape[1], 1)
+            graphs.append(Data(x=x, edge_index=ei, edge_attr=ea, y=torch.tensor(float(label))))
+            labels.append(label)
+        results = run_kfold_experiment(
+            graphs, np.array(labels),
+            model_class=GNN_GCN,
+            model_params={'input_dim': 1, 'hidden_dim': 8, 'num_layers': 2,
+                          'dropout': 0.0, 'pooling': 'mean', 'num_classes': 2},
+            training_params={'batch_size': 8, 'num_epochs': 30, 'learning_rate': 0.01,
+                             'weight_decay': 0.0, 'early_stopping_patience': 10,
+                             'loss': {'type': 'bce'}},
+            dataset_class=ToyDataset,
+            n_folds=3, num_runs_per_fold=1, random_seed=0, verbose=False,
+        )
+        assert results['aggregated']['mean_accuracy'] > 0.75, (
+            "Pipeline failed to learn a clearly separable signal — training is broken."
+        )

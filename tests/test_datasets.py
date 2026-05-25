@@ -199,18 +199,21 @@ class TestAGPDataset:
         with pytest.raises(ValueError, match="Unknown disease"):
             ds.get_disease_labels("Nonexistent")
 
+    # Use a guaranteed-absent data_dir so the assertion tests the loader's behaviour,
+    # not which files happen to exist (the production files exist on the server, which
+    # made these three flaky / falsely failing there).
     def test_missing_biom_raises(self, agp_config):
-        ds = AmericanGutDataset(agp_config)
+        ds = AmericanGutDataset({**agp_config, "data_dir": "/tmp/nonexistent_biomeml_agp"})
         with pytest.raises(FileNotFoundError):
             ds.load_abundance_data()
 
     def test_missing_metadata_raises(self, agp_config):
-        ds = AmericanGutDataset(agp_config)
+        ds = AmericanGutDataset({**agp_config, "data_dir": "/tmp/nonexistent_biomeml_agp"})
         with pytest.raises(FileNotFoundError):
             ds.load_metadata()
 
     def test_missing_phylogeny_raises(self, agp_config):
-        ds = AmericanGutDataset(agp_config)
+        ds = AmericanGutDataset({**agp_config, "data_dir": "/tmp/nonexistent_biomeml_agp"})
         with pytest.raises(FileNotFoundError):
             ds.load_phylogeny()
 
@@ -835,3 +838,36 @@ class TestDatasetConfigYAMLFiles:
         cfg = self._load_yaml(configs_dir / "custom_template.yaml")
         assert 'dataset_name' in cfg
         assert 'conditions' in cfg
+
+
+class TestLabelMatchingRegression:
+    """Guards the substring-matching bug where a case token ('ibd') matched control
+    labels ('nonIBD') via str.contains and silently mislabeled controls as cases."""
+
+    def test_nonibd_control_not_labeled_case(self, tmp_path):
+        from src.datasets.config_driven import ConfigDrivenDataset
+        ddir = tmp_path / "ds"
+        ddir.mkdir()
+        (ddir / "meta.csv").write_text(
+            "sample_id,study_condition\ns1,IBD\ns2,IBD\ns3,control\ns4,nonIBD\n"
+        )
+        cfg = {
+            "data_dir": str(tmp_path),
+            "dataset_name": "ds",
+            "abundance_file": "abundance.csv",
+            "metadata_file": "meta.csv",
+            "columns": {"sample_id": "sample_id"},
+            "conditions": {
+                "IBD": {
+                    "column": "study_condition",
+                    "case_values": ["IBD"],
+                    "control_values": ["control", "nonIBD"],
+                }
+            },
+        }
+        ds = ConfigDrivenDataset(cfg)
+        sample_ids, labels = ds.get_disease_labels("IBD")
+        label_by_id = dict(zip([str(s) for s in sample_ids], [int(x) for x in labels]))
+        assert label_by_id["s4"] == 0, "nonIBD control mislabeled as case (substring bug)"
+        assert label_by_id["s1"] == 1 and label_by_id["s3"] == 0
+        assert int(sum(labels)) == 2 and (len(labels) - int(sum(labels))) == 2
