@@ -16,6 +16,8 @@ class AmericanGutDataset(BaseDataset):
     DISEASES = [
         'IBD', 'Diabetes', 'Cancer', 'Autoimmune', 'Depression',
         'Mental_Illness', 'PTSD', 'Arthritis', 'Asthma', 'Stomach_Bowel',
+        # Multi-class target (decade bins) for the binary-vs-multi-class sub-question.
+        'AGE_CATEGORY',
     ]
 
     DISEASE_COLUMNS = {
@@ -29,7 +31,11 @@ class AmericanGutDataset(BaseDataset):
         'Arthritis': 'arthritis',
         'Asthma': 'asthma',
         'Stomach_Bowel': 'stomach_bowel',
+        'AGE_CATEGORY': 'age_cat',
     }
+
+    # Ordered decade bins for the multi-class age target (Q3 sub-question).
+    AGE_BINS = ['20s', '30s', '40s', '50s', '60s', '70+']
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
@@ -88,6 +94,20 @@ class AmericanGutDataset(BaseDataset):
         canonical = {d.lower(): d for d in self.DISEASES}.get(disease_name.lower())
         if canonical is None:
             raise ValueError(f"Unknown disease: {disease_name}. Supported: {self.DISEASES}")
+
+        # Multi-class age target (Q3 sub-question): map age_cat -> ordinal 0..5.
+        # Samples outside the 6 decade bins are dropped.
+        if canonical == 'AGE_CATEGORY':
+            metadata = self.load_metadata()
+            if 'age_cat' not in metadata.columns:
+                raise ValueError("Column 'age_cat' not found in AGP metadata")
+            valid_mask = metadata['age_cat'].isin(self.AGE_BINS)
+            sample_ids = metadata.loc[valid_mask].index.values
+            mapping = {b: i for i, b in enumerate(self.AGE_BINS)}
+            labels = metadata.loc[valid_mask, 'age_cat'].map(mapping).astype(int).values
+            if len(sample_ids) == 0:
+                raise ValueError(f"No samples with valid age_cat in {self.AGE_BINS}")
+            return sample_ids, labels
 
         metadata = self.load_metadata()
         col_name = self.DISEASE_COLUMNS[canonical]

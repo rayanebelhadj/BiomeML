@@ -64,7 +64,7 @@ data_extraction:
   # Distance matrix selection
   distance_matrices:
     use_tree_distance: true      # TreeDistMatrix (phylogenetic tree tip-to-tip)
-    use_sequence_distance: false # SeqDistMatrix (Jukes-Cantor)
+    use_sequence_distance: true  # SeqDistMatrix (Jukes-Cantor on the 150 bp ASV sequences); always compute so the shared extraction supports distance_sequence experiments without re-extracting
     use_graph_distance: false    # GraphDistMatrix (phylogenetic network)
     primary_matrix: "TreeDistMatrix"  # Which matrix to use for graphs
   

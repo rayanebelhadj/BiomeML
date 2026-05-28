@@ -36,12 +36,20 @@ k_20:
   graph_construction:
     knn:
       k: 20
-# distance_tree / distance_sequence / distance_graph REMOVED: they set no overrides,
-# so they were byte-identical to `baseline` (all use TreeDistMatrix). Real
-# sequence/graph-distance experiments require NB01 to compute SeqDistMatrix /
-# GraphDistMatrix and the experiment to set data_extraction.distance_matrices
-# accordingly; until that is implemented these were silent no-ops. distance_tree
-# is just baseline. Re-add with proper overrides once the matrices are produced.
+# Main-question comparison: phylogenetic tree distance vs sequence distance.
+# NB01 now also computes SeqDistMatrix (Jukes-Cantor on the 150 bp ASV nucleotide
+# sequences, which AGP feature IDs already are -- co-aligned by 16S region).
+# `baseline` is the tree-distance reference (primary_matrix=TreeDistMatrix from
+# config.yaml). `distance_sequence` flips the primary to SeqDistMatrix on the
+# same extraction. (distance_graph remains unimplemented -- no GraphDistMatrix.)
+distance_sequence:
+  name: distance_sequence
+  dataset: agp
+  disease: ibd
+  description: Sequence-based (Jukes-Cantor) distance graphs vs baseline tree-distance
+  data_extraction:
+    distance_matrices:
+      primary_matrix: "SeqDistMatrix"
 edge_identity:
   name: edge_identity
   dataset: agp
@@ -256,6 +264,56 @@ no_graph_mlp:
   model_training:
     architecture:
       model_type: MLP
+
+# CNN baselines (Q2: graphs vs CNN fixed neighborhoods, the main-question argument
+# that graphs allow more flexible representations than CNNs).
+cnn_ibd:
+  name: cnn_ibd
+  dataset: agp
+  disease: ibd
+  description: 1D CNN baseline (Q2 - tests if graphs beat fixed CNN neighborhoods)
+  model_training:
+    architecture:
+      model_type: CNN
+cnn_t2d:
+  name: cnn_t2d
+  dataset: agp
+  disease: Diabetes
+  description: 1D CNN baseline for Diabetes
+  model_training:
+    architecture:
+      model_type: CNN
+
+# Multi-class age experiments (Q3 sub-question: is binary classification the
+# 'same' as multi-class?). 6 decade bins from age_cat (20s..70+). num_classes=6
+# triggers NB03's CrossEntropyLoss + argmax path; matching is skipped in NB01.
+baseline_age:
+  name: baseline_age
+  dataset: agp
+  disease: AGE_CATEGORY
+  description: GINEConv on multi-class age (Q3 - binary vs multi-class)
+  model_training:
+    architecture:
+      model_type: GINEConv
+      num_classes: 6
+no_graph_age:
+  name: no_graph_age
+  dataset: agp
+  disease: AGE_CATEGORY
+  description: MLP baseline on multi-class age (Q3 control)
+  model_training:
+    architecture:
+      model_type: MLP
+      num_classes: 6
+cnn_age:
+  name: cnn_age
+  dataset: agp
+  disease: AGE_CATEGORY
+  description: CNN baseline on multi-class age (Q3)
+  model_training:
+    architecture:
+      model_type: CNN
+      num_classes: 6
 
 # baseline_ages removed: AGP has no 'ages' disease column and there is no defined
 # binary age-prediction target. Re-add with a real condition if needed.
