@@ -18,24 +18,39 @@ class AmericanGutDataset(BaseDataset):
         'Mental_Illness', 'PTSD', 'Arthritis', 'Asthma', 'Stomach_Bowel',
         # Multi-class target (decade bins) for the binary-vs-multi-class sub-question.
         'AGE_CATEGORY',
+        # Multi-class IBD subtype target (Colonic CD vs UC vs Ileal CD).
+        'IBD_SUBTYPE',
     ]
 
+    # The Cursor research plan called for 6 additional diseases (Depression, PTSD,
+    # Arthritis, Asthma, Stomach_Bowel, Mental_Illness) that the old DISEASE_COLUMNS
+    # mapped to non-existent column names like `depression`. Those columns DO exist
+    # in AGP metadata, just under prefixed names (`mental_illness_type_*`,
+    # `covid_chronic_conditions_*`). The yes/no encoding they use is already handled
+    # by get_disease_labels below.
     DISEASE_COLUMNS = {
         'IBD': 'ibd',
         'Diabetes': 'diabetes',
         'Cancer': 'cancer',
         'Autoimmune': 'autoimmune',
-        'Depression': 'depression',
-        'Mental_Illness': 'mental_illness',
-        'PTSD': 'ptsd',
-        'Arthritis': 'arthritis',
-        'Asthma': 'asthma',
-        'Stomach_Bowel': 'stomach_bowel',
+        # Newly mapped: COVID-survey chronic-condition columns
+        'Arthritis': 'covid_chronic_conditions_arthritis',
+        'Asthma': 'covid_chronic_conditions_asthma_or_other_lung_problems',
+        'Stomach_Bowel': 'covid_chronic_conditions_serious_stomach_or_bowel_problems',
+        # Newly mapped: mental-illness survey columns
+        'Depression': 'mental_illness_type_depression',
+        'PTSD': 'mental_illness_type_ptsd_post_traumatic_stress_disorder',
+        'Mental_Illness': 'mental_illness_type_unspecified',
+        # Multi-class targets (handled by special-case branches below)
         'AGE_CATEGORY': 'age_cat',
+        'IBD_SUBTYPE': 'ibd_diagnosis_refined',
     }
 
     # Ordered decade bins for the multi-class age target (Q3 sub-question).
     AGE_BINS = ['20s', '30s', '40s', '50s', '60s', '70+']
+
+    # Multi-class IBD subtype bins (ordered for label encoding).
+    IBD_SUBTYPE_BINS = ["Colonic Crohn's Disease", "Ulcerative colitis", "Ileal Crohn's Disease"]
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
@@ -107,6 +122,19 @@ class AmericanGutDataset(BaseDataset):
             labels = metadata.loc[valid_mask, 'age_cat'].map(mapping).astype(int).values
             if len(sample_ids) == 0:
                 raise ValueError(f"No samples with valid age_cat in {self.AGE_BINS}")
+            return sample_ids, labels
+
+        # Multi-class IBD subtype target (clinically meaningful 3-way split).
+        if canonical == 'IBD_SUBTYPE':
+            metadata = self.load_metadata()
+            if 'ibd_diagnosis_refined' not in metadata.columns:
+                raise ValueError("Column 'ibd_diagnosis_refined' not found in AGP metadata")
+            valid_mask = metadata['ibd_diagnosis_refined'].isin(self.IBD_SUBTYPE_BINS)
+            sample_ids = metadata.loc[valid_mask].index.values
+            mapping = {b: i for i, b in enumerate(self.IBD_SUBTYPE_BINS)}
+            labels = metadata.loc[valid_mask, 'ibd_diagnosis_refined'].map(mapping).astype(int).values
+            if len(sample_ids) == 0:
+                raise ValueError(f"No samples with valid IBD subtype in {self.IBD_SUBTYPE_BINS}")
             return sample_ids, labels
 
         metadata = self.load_metadata()

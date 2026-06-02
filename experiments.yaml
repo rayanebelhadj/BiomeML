@@ -552,3 +552,88 @@ random_edges_autoimmune:
   {name: random_edges_autoimmune, dataset: agp, disease: Autoimmune, description: Random-topology control on Autoimmune, graph_construction: {graph_type: random_edges, knn: {k: 10}}}
 complete_graph_autoimmune:
   {name: complete_graph_autoimmune, dataset: agp, disease: Autoimmune, description: Fully-connected control on Autoimmune, graph_construction: {graph_type: complete}}
+
+# ============================================================================
+# Newly-unblocked diseases (column-mapping fix in agp.py): the Cursor plan's
+# missing 5 diseases ARE available, just under prefixed AGP column names.
+# Smaller-N for Arthritis/Asthma/Stomach_Bowel/PTSD; ample for Depression.
+# ============================================================================
+
+# --- Depression (n~2.8K cases) ---
+depression_baseline:
+  {name: depression_baseline, dataset: agp, disease: Depression, description: Depression GINEConv, model_training: {architecture: {model_type: GINEConv}}}
+depression_mlp:
+  {name: depression_mlp, dataset: agp, disease: Depression, description: Depression MLP (Q1), model_training: {architecture: {model_type: MLP}}}
+depression_cnn:
+  {name: depression_cnn, dataset: agp, disease: Depression, description: Depression CNN (Q2), model_training: {architecture: {model_type: CNN}}}
+depression_shuffle:
+  {name: depression_shuffle, dataset: agp, disease: Depression, description: Depression shuffle control, data_extraction: {shuffle_labels: true}}
+
+# --- PTSD (n~530 cases) ---
+ptsd_baseline:
+  {name: ptsd_baseline, dataset: agp, disease: PTSD, description: PTSD GINEConv, model_training: {architecture: {model_type: GINEConv}}}
+ptsd_mlp:
+  {name: ptsd_mlp, dataset: agp, disease: PTSD, description: PTSD MLP, model_training: {architecture: {model_type: MLP}}}
+ptsd_cnn:
+  {name: ptsd_cnn, dataset: agp, disease: PTSD, description: PTSD CNN, model_training: {architecture: {model_type: CNN}}}
+ptsd_shuffle:
+  {name: ptsd_shuffle, dataset: agp, disease: PTSD, description: PTSD shuffle control, data_extraction: {shuffle_labels: true}}
+
+# --- Arthritis (n~290 cases) ---
+arthritis_baseline:
+  {name: arthritis_baseline, dataset: agp, disease: Arthritis, description: Arthritis GINEConv, model_training: {architecture: {model_type: GINEConv}}}
+arthritis_mlp:
+  {name: arthritis_mlp, dataset: agp, disease: Arthritis, description: Arthritis MLP, model_training: {architecture: {model_type: MLP}}}
+arthritis_cnn:
+  {name: arthritis_cnn, dataset: agp, disease: Arthritis, description: Arthritis CNN, model_training: {architecture: {model_type: CNN}}}
+arthritis_shuffle:
+  {name: arthritis_shuffle, dataset: agp, disease: Arthritis, description: Arthritis shuffle control, data_extraction: {shuffle_labels: true}}
+
+# --- Asthma (n~360 cases) ---
+asthma_baseline:
+  {name: asthma_baseline, dataset: agp, disease: Asthma, description: Asthma GINEConv, model_training: {architecture: {model_type: GINEConv}}}
+asthma_mlp:
+  {name: asthma_mlp, dataset: agp, disease: Asthma, description: Asthma MLP, model_training: {architecture: {model_type: MLP}}}
+asthma_cnn:
+  {name: asthma_cnn, dataset: agp, disease: Asthma, description: Asthma CNN, model_training: {architecture: {model_type: CNN}}}
+asthma_shuffle:
+  {name: asthma_shuffle, dataset: agp, disease: Asthma, description: Asthma shuffle control, data_extraction: {shuffle_labels: true}}
+
+# --- Stomach_Bowel (n~175 cases, smallest) ---
+stomach_baseline:
+  {name: stomach_baseline, dataset: agp, disease: Stomach_Bowel, description: Stomach/Bowel GINEConv, model_training: {architecture: {model_type: GINEConv}}}
+stomach_mlp:
+  {name: stomach_mlp, dataset: agp, disease: Stomach_Bowel, description: Stomach/Bowel MLP, model_training: {architecture: {model_type: MLP}}}
+stomach_cnn:
+  {name: stomach_cnn, dataset: agp, disease: Stomach_Bowel, description: Stomach/Bowel CNN, model_training: {architecture: {model_type: CNN}}}
+stomach_shuffle:
+  {name: stomach_shuffle, dataset: agp, disease: Stomach_Bowel, description: Stomach/Bowel shuffle control, data_extraction: {shuffle_labels: true}}
+
+# --- IBD subtypes (Colonic CD vs UC vs Ileal CD, 3-class, clinically meaningful) ---
+ibd_subtypes_baseline:
+  name: ibd_subtypes_baseline
+  dataset: agp
+  disease: IBD_SUBTYPE
+  description: 3-class IBD subtype classification (Cursor plan Q3 alternative, clinically meaningful)
+  model_training:
+    architecture:
+      model_type: GINEConv
+      num_classes: 3
+ibd_subtypes_mlp:
+  name: ibd_subtypes_mlp
+  dataset: agp
+  disease: IBD_SUBTYPE
+  description: 3-class IBD subtype MLP baseline
+  model_training:
+    architecture:
+      model_type: MLP
+      num_classes: 3
+ibd_subtypes_cnn:
+  name: ibd_subtypes_cnn
+  dataset: agp
+  disease: IBD_SUBTYPE
+  description: 3-class IBD subtype CNN baseline
+  model_training:
+    architecture:
+      model_type: CNN
+      num_classes: 3
