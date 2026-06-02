@@ -665,6 +665,72 @@ def make_complete_graph(G: nx.Graph) -> nx.Graph:
     return G_complete
 
 
+def build_random_edges_graph(
+    distance_matrix: np.ndarray,
+    feature_ids: List[str],
+    k: int = 10,
+    seed: int = 42,
+    abundances: Optional[Dict[str, float]] = None,
+    **_,
+) -> nx.Graph:
+    """Random-topology control graph.
+
+    Same edge *budget* as a k-NN with the given k (so density is comparable), but
+    pairs are sampled uniformly at random instead of by phylogenetic proximity.
+    Edge weights keep the underlying distance, so weight-transform experiments
+    still apply. Tests whether the GNN advantage comes from *graphs in general*
+    or specifically from phylogenetic neighborhoods.
+    """
+    n = len(feature_ids)
+    G = nx.Graph()
+    for i, fid in enumerate(feature_ids):
+        attrs = {'idx': i}
+        if abundances is not None and fid in abundances:
+            attrs['abundance'] = abundances[fid]
+        G.add_node(fid, **attrs)
+
+    target_edges = max(1, (k * n) // 2)
+    max_possible = n * (n - 1) // 2
+    target_edges = min(target_edges, max_possible)
+    rng = np.random.RandomState(seed)
+    seen = set()
+    while len(seen) < target_edges:
+        i = int(rng.randint(0, n))
+        j = int(rng.randint(0, n))
+        if i == j:
+            continue
+        a, b = (i, j) if i < j else (j, i)
+        if (a, b) in seen:
+            continue
+        seen.add((a, b))
+        G.add_edge(feature_ids[a], feature_ids[b], weight=float(distance_matrix[a, b]))
+    return G
+
+
+def build_complete_graph(
+    distance_matrix: np.ndarray,
+    feature_ids: List[str],
+    abundances: Optional[Dict[str, float]] = None,
+    **_,
+) -> nx.Graph:
+    """Fully-connected control graph (every pair of features connected).
+
+    Edge weights are the raw distances. With ~2k features this is dense (~2M
+    edges) but tractable. Tests whether the GNN advantage depends on *sparsity*.
+    """
+    n = len(feature_ids)
+    G = nx.Graph()
+    for i, fid in enumerate(feature_ids):
+        attrs = {'idx': i}
+        if abundances is not None and fid in abundances:
+            attrs['abundance'] = abundances[fid]
+        G.add_node(fid, **attrs)
+    for i in range(n):
+        for j in range(i + 1, n):
+            G.add_edge(feature_ids[i], feature_ids[j], weight=float(distance_matrix[i, j]))
+    return G
+
+
 def get_graph_builder(graph_type: str):
     """
     Get graph construction function by type name.
@@ -686,7 +752,9 @@ def get_graph_builder(graph_type: str):
         'tree': build_tree_graph,
         'threshold': build_threshold_graph,
         'hierarchical': build_hierarchical_graph,
-        'mst': build_mst_graph
+        'mst': build_mst_graph,
+        'random_edges': build_random_edges_graph,
+        'complete': build_complete_graph,
     }
     
     if graph_type not in builders:

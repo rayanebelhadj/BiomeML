@@ -417,3 +417,138 @@ cmd_mlp_ibd:
   model_training:
     architecture:
       model_type: MLP
+
+# ============================================================================
+# Cursor-plan additions (the parts implementable without new code).
+# Multi-disease only covers the 4 diseases that ACTUALLY have AGP metadata
+# (IBD, Diabetes, Cancer, Autoimmune); the other 6 in the plan have empty or
+# missing columns. random_edges/complete_graph/distance_graph need extra
+# infrastructure and are added in a separate block below.
+# ============================================================================
+
+# --- IBD: missing edge-weight variants + EdgeCentric architecture + explicit k=10 ---
+edge_inverse:
+  name: edge_inverse
+  dataset: agp
+  disease: ibd
+  description: Inverse-distance edge weighting (Q4)
+  graph_construction:
+    weights:
+      weight_transform: inverse
+edge_abundance_min:
+  name: edge_abundance_min
+  dataset: agp
+  disease: ibd
+  description: Abundance-min edge weighting (Q4)
+  graph_construction:
+    weights:
+      weight_transform: abundance_min
+edge_abundance_max:
+  name: edge_abundance_max
+  dataset: agp
+  disease: ibd
+  description: Abundance-max edge weighting (Q4)
+  graph_construction:
+    weights:
+      weight_transform: abundance_max
+edgecentric_arch:
+  name: edgecentric_arch
+  dataset: agp
+  disease: ibd
+  description: EdgeCentricRGCN architecture (Q5)
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+k_10:
+  name: k_10
+  dataset: agp
+  disease: ibd
+  description: Explicit k=10 reference (matches baseline default)
+  graph_construction:
+    knn:
+      k: 10
+
+# --- Diabetes: complete the Q1/Q2/Q5 set ---
+mlp_t2d:
+  name: mlp_t2d
+  dataset: agp
+  disease: Diabetes
+  description: Diabetes MLP baseline (Q1)
+  model_training:
+    architecture:
+      model_type: MLP
+graphsage_t2d:
+  name: graphsage_t2d
+  dataset: agp
+  disease: Diabetes
+  description: Diabetes GraphSAGE (Q5)
+  model_training:
+    architecture:
+      model_type: GraphSAGE
+edgecentric_t2d:
+  name: edgecentric_t2d
+  dataset: agp
+  disease: Diabetes
+  description: Diabetes EdgeCentricRGCN (Q5)
+  model_training:
+    architecture:
+      model_type: EdgeCentricRGCN
+
+# --- Cancer: full set (Q1/Q2/Q5 + control) ---
+cancer_baseline:
+  {name: cancer_baseline, dataset: agp, disease: Cancer, description: Cancer GINEConv baseline, model_training: {architecture: {model_type: GINEConv}}}
+cancer_mlp:
+  {name: cancer_mlp, dataset: agp, disease: Cancer, description: Cancer MLP (Q1), model_training: {architecture: {model_type: MLP}}}
+cancer_cnn:
+  {name: cancer_cnn, dataset: agp, disease: Cancer, description: Cancer CNN (Q2), model_training: {architecture: {model_type: CNN}}}
+cancer_gcn:
+  {name: cancer_gcn, dataset: agp, disease: Cancer, description: Cancer GCN (Q5), model_training: {architecture: {model_type: GCN}}}
+cancer_gat:
+  {name: cancer_gat, dataset: agp, disease: Cancer, description: Cancer GAT (Q5), model_training: {architecture: {model_type: GAT}}}
+cancer_graphsage:
+  {name: cancer_graphsage, dataset: agp, disease: Cancer, description: Cancer GraphSAGE (Q5), model_training: {architecture: {model_type: GraphSAGE}}}
+cancer_edgecentric:
+  {name: cancer_edgecentric, dataset: agp, disease: Cancer, description: Cancer EdgeCentricRGCN (Q5), model_training: {architecture: {model_type: EdgeCentricRGCN}}}
+cancer_shuffle:
+  {name: cancer_shuffle, dataset: agp, disease: Cancer, description: Cancer shuffle-label control, data_extraction: {shuffle_labels: true}}
+
+# --- Autoimmune: full set (Q1/Q2/Q5 + control) ---
+autoimmune_baseline:
+  {name: autoimmune_baseline, dataset: agp, disease: Autoimmune, description: Autoimmune GINEConv baseline, model_training: {architecture: {model_type: GINEConv}}}
+autoimmune_mlp:
+  {name: autoimmune_mlp, dataset: agp, disease: Autoimmune, description: Autoimmune MLP (Q1), model_training: {architecture: {model_type: MLP}}}
+autoimmune_cnn:
+  {name: autoimmune_cnn, dataset: agp, disease: Autoimmune, description: Autoimmune CNN (Q2), model_training: {architecture: {model_type: CNN}}}
+autoimmune_gcn:
+  {name: autoimmune_gcn, dataset: agp, disease: Autoimmune, description: Autoimmune GCN (Q5), model_training: {architecture: {model_type: GCN}}}
+autoimmune_gat:
+  {name: autoimmune_gat, dataset: agp, disease: Autoimmune, description: Autoimmune GAT (Q5), model_training: {architecture: {model_type: GAT}}}
+autoimmune_graphsage:
+  {name: autoimmune_graphsage, dataset: agp, disease: Autoimmune, description: Autoimmune GraphSAGE (Q5), model_training: {architecture: {model_type: GraphSAGE}}}
+autoimmune_edgecentric:
+  {name: autoimmune_edgecentric, dataset: agp, disease: Autoimmune, description: Autoimmune EdgeCentricRGCN (Q5), model_training: {architecture: {model_type: EdgeCentricRGCN}}}
+autoimmune_shuffle:
+  {name: autoimmune_shuffle, dataset: agp, disease: Autoimmune, description: Autoimmune shuffle-label control, data_extraction: {shuffle_labels: true}}
+
+# --- Graph-topology controls (Cursor plan): random_edges keeps the GNN's
+# edge budget but randomizes which pairs connect (tests whether phylogenetic
+# neighborhoods matter vs any graph); complete_graph fully connects features
+# (tests whether sparsity matters). Same controls across the 4 working diseases.
+# NOTE: complete_graph on ~1975 features is ~2M edges/sample; tractable on A100
+# but slow -- consider reducing feature_filtering.max_features if needed.
+random_edges_ibd:
+  {name: random_edges_ibd, dataset: agp, disease: ibd, description: Random-topology control on IBD (same edge budget as k-NN), graph_construction: {graph_type: random_edges, knn: {k: 10}}}
+complete_graph_ibd:
+  {name: complete_graph_ibd, dataset: agp, disease: ibd, description: Fully-connected control on IBD, graph_construction: {graph_type: complete}}
+random_edges_t2d:
+  {name: random_edges_t2d, dataset: agp, disease: Diabetes, description: Random-topology control on Diabetes, graph_construction: {graph_type: random_edges, knn: {k: 10}}}
+complete_graph_t2d:
+  {name: complete_graph_t2d, dataset: agp, disease: Diabetes, description: Fully-connected control on Diabetes, graph_construction: {graph_type: complete}}
+random_edges_cancer:
+  {name: random_edges_cancer, dataset: agp, disease: Cancer, description: Random-topology control on Cancer, graph_construction: {graph_type: random_edges, knn: {k: 10}}}
+complete_graph_cancer:
+  {name: complete_graph_cancer, dataset: agp, disease: Cancer, description: Fully-connected control on Cancer, graph_construction: {graph_type: complete}}
+random_edges_autoimmune:
+  {name: random_edges_autoimmune, dataset: agp, disease: Autoimmune, description: Random-topology control on Autoimmune, graph_construction: {graph_type: random_edges, knn: {k: 10}}}
+complete_graph_autoimmune:
+  {name: complete_graph_autoimmune, dataset: agp, disease: Autoimmune, description: Fully-connected control on Autoimmune, graph_construction: {graph_type: complete}}
