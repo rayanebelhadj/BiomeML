@@ -50,6 +50,16 @@ distance_sequence:
   data_extraction:
     distance_matrices:
       primary_matrix: "SeqDistMatrix"
+# Phylogenetic network distance (shortest-path on a k-NN sequence-similarity graph) --
+# the third leg of the main question's "tree OR sequence OR network distance" comparison.
+distance_graph:
+  name: distance_graph
+  dataset: agp
+  disease: ibd
+  description: Phylogenetic-network distance (shortest-path on k-NN seq-similarity graph)
+  data_extraction:
+    distance_matrices:
+      primary_matrix: "GraphDistMatrix"
 edge_identity:
   name: edge_identity
   dataset: agp
