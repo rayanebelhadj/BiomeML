@@ -22,3 +22,6 @@ docs/
 .tmp_*
 rebuild2.py
 tmp/
+
+# pytest cache
+.pytest_cache/
